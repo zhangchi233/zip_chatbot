@@ -30,10 +30,12 @@ def chatbot(request):
 
     if request.method == 'POST':
         message = request.POST.get('message')
-        response = ask_openai(message)
+        #response = ask_openai(message)
 
-        chat = Chat(user=request.user, message=message, response=response, created_at=timezone.now())
-        chat.save()
+        #chat = Chat(user=request.user, message=message, response=response, created_at=timezone.now())
+        #chat.save()
+        print("message is",message)
+        response = "add your chatgpt api"
         return JsonResponse({'message': message, 'response': response})
     return render(request, 'chatbot.html', {'chats': chats})
 
