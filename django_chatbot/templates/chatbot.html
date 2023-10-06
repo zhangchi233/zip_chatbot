@@ -115,8 +115,12 @@
 
           {% endif %}
         {% endfor %}
+
+
+
         
       </ul>
+
       
     </div>
     <br><br>
@@ -131,6 +135,7 @@
         <button type="submit" class="btn btn-primary btn-send">Send</button>
       </div>
     </div>
+
   </form>
 </div>
 
@@ -186,6 +191,29 @@
         </div>
           `;
         messagesList.appendChild(messageItem);
+        if (data.conversation === true) {
+        // Create "Yes" button
+        const yesButton = document.createElement('button');
+        yesButton.textContent = 'Yes';
+        yesButton.addEventListener('click', () => {
+        // Handle the "Yes" button click event here
+        // You can perform any actions you need when "Yes" is clicked
+        const userId = 123;
+        window.location.replace('/download_report/');
+        });
+        // Create "No" button
+        const noButton = document.createElement('button');
+        noButton.textContent = 'No';
+        noButton.addEventListener('click', () => {
+        // Handle the "No" button click event here
+        // You can perform any actions you need when "No" is clicked
+
+        });
+
+        // Append the buttons to the messageForm
+        messagesList.appendChild(yesButton);
+        messagesList.appendChild(noButton);
+        }
       });
   });
 

@@ -36,7 +36,7 @@ def chatbot(request):
         #chat.save()
         print("message is",message)
         response = "add your chatgpt api"
-        return JsonResponse({'message': message, 'response': response})
+        return JsonResponse({'message': message, 'response': response,'conversation':True})
     return render(request, 'chatbot.html', {'chats': chats})
 
 
@@ -66,6 +66,9 @@ def register(request):
                 user = User.objects.create_user(username, email, password1)
                 user.save()
                 auth.login(request, user)
+
+
+
                 return redirect('chatbot')
             except:
                 error_message = 'Error creating account'

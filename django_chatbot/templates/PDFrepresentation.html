@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer</title>
+</head>
+<body>
+    <h1>PDF Viewer</h1>
+    <p>Here's the embedded PDF:</p>
+    <embed src="{% url 'generate_pdf' %}" width="100%" height="500px", type="application/pdf">
+</body>
+</html>
