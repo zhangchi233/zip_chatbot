@@ -14,6 +14,6 @@ class Report(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     report = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
+    images = models.ImageField(upload_to='media', max_length=100, blank=True, null=True, verbose_name='user_images')
     def __str__(self):
         return f'{self.user.username}: {self.report}'

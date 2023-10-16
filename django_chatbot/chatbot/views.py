@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 import openai
-
+from .forms import ReportForm
 from django.contrib import auth
 from django.contrib.auth.models import User
 from .models import Chat
@@ -81,3 +81,18 @@ def register(request):
 def logout(request):
     auth.logout(request)
     return redirect('login')
+
+
+def upload_image(request):
+
+    if request.method =="POST":
+        form = ReportForm(request.POST, request.FILES)
+        print(form.is_valid())
+        if form.is_valid():
+
+            report = form.save(commit=False)
+
+            #report.user ="maxzhang"  # Assuming user authentication is in place
+            report.save()
+            return render(request,'add_user_image.html')  # Redirect to a page showing all reports
+    return render(request,'add_user_image.html')
