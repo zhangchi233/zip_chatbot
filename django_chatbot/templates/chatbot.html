@@ -174,8 +174,8 @@
     messagesList.appendChild(messageItem);
 
     messageInput.value = '';
-    console.log(message);
-    fetch('dialogue', {
+
+    fetch('dialogue?starttime={{ starttime }}', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -203,6 +203,7 @@
         messagesList.appendChild(messageItem);
         if (data.conversation === true) {
         // Create "Yes" button
+            console.log("conversation")
         const yesButton = document.createElement('button');
         yesButton.textContent = 'Yes';
         yesButton.addEventListener('click', () => {

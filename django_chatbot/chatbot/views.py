@@ -37,30 +37,45 @@ def ask_openai(message,chats):
 
 # Create your views here.
 def chatbot(request,username):
-    print("get request--------------")
-    chats = Chat.objects.filter(user=username)
+
+    starttime = request.GET.get('starttime')
+
+    starttime = datetime.datetime.strptime(starttime, '%Y-%m-%d %H:%M:%S.%f')
+
+    chats = Chat.objects.filter(user=request.user,starttime__date=starttime.date(),
+                                starttime__hour=starttime.hour,starttime__minute=starttime.minute,
+                                starttime__second=starttime.second)
+
+
     if request.method == 'POST':
-        print("get post")
+
         message = request.POST.get('message')
-        chat_messages = chats.values_list('message', flat=True)
+        chats = chats.order_by('created_at')
+        z = []
+        for chat in chats:
+            z.append(chat.message)
+            z.append(chat.response)
+        chat_messages = " \n ".join(z)
+        response = ask_openai(message, chat_messages)
 
-        message_judge = "do you want to continue the conversation?, if yes, please type yes, chatgpt will continue," \
-                        " if no, please type"\
-                        "no, chatgpt will give summary" \
-                        "and give a summary in the format of 'summary: your summary...'"
+        chat = Chat(user=request.user, message=message, starttime=starttime,
+                    response=response, created_at=timezone.now())
+        chat.save()
+
+        print("chat messages are",chat_messages)
+        message_judge = "do you think based on the dialogue history it is enough to obtaine the" \
+                        "health condition ?, if yes, please type: 'yes, chatgpt will continue'," \
+                        " if no, please type: 'no, chatgpt will give summary' "
+
         response_continue = ask_openai(message_judge,chat_messages)
+        print("response continue is",response_continue)
         if "yes, chatgpt will continue" in response_continue:
-            response = ask_openai(message, chat_messages)
-
-            chat = Chat(user=request.user, message=message, starttime=request.starttime,
-                        response=response, created_at=timezone.now())
-            chat.save()
-            print("message is", message)
-            response = response
-            return JsonResponse({'message': message, 'response': response,'conversation':True})
-        elif "no, chatgpt will give summary":
-            response = response_continue.split("summary:")[1]
-            chat = Chat(user=request.user, message=message, starttime=request.starttime,
+            return JsonResponse({'message': message, 'response': response,'conversation':False})
+        if True:
+            summary_message = "given the conversation above, please give a summary of the patient's health condition in the " \
+                              "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her "
+            response = ask_openai(summary_message, chat_messages)
+            chat = Chat(user=request.user, message=message, starttime=starttime,
                         response=response, created_at=timezone.now())
             chat.save()
             print("message is", message)
