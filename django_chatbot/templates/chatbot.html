@@ -67,8 +67,10 @@
 {% block content %}
 <div class="chat-container">
   <div class="card flex-grow-1">
-    <div class="card-header bg-primary text-white">Chat</div>
+    <div class="card-header bg-primary text-white">Chat Start Time: {{ starttime }}</div>
+
     {% if user.is_authenticated %}
+
     <div class="card-header bg-primary text-white"><b>Welcome, {{user.username}}</b>   <a style="color: yellow;" href="logout">Logout</a></div>
     {% else %}
     <div class="card-header bg-primary text-white"><a style="color: yellow" href="login">Login</a>   <a style="color: yellow;" href="register">Register</a></div>
@@ -143,9 +145,12 @@
 </div>
 
 <script>
+  //window.location.replace("")
   const messagesList = document.querySelector('.messages-list');
   const messageForm = document.querySelector('.message-form');
   const messageInput = document.querySelector('.message-input');
+  // get start time from string of variable starttime in template
+  const starttime = new Date('{{starttime}}');
 
   messageForm.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -169,18 +174,20 @@
     messagesList.appendChild(messageItem);
 
     messageInput.value = '';
-
-    fetch('', {
+    console.log(message);
+    fetch('dialogue', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-        'message': message
+        'message': message,
+        'starttime': starttime,
       })
     })
       .then(response => response.json())
       .then(data => {
         const response = data.response;
+
         const messageItem = document.createElement('li');
         messageItem.classList.add('message', 'received');
         messageItem.innerHTML = `
@@ -208,6 +215,18 @@
         const noButton = document.createElement('button');
         noButton.textContent = 'No';
         noButton.addEventListener('click', () => {
+        // return the response: please input the body part you want to make supplement
+        const messageItem = document.createElement('li');
+        messageItem.classList.add('message', 'sent');
+        messageItem.innerHTML = `
+        <div class="message-text">
+            <div class="message-sender">
+                <b>You</b>
+            </div>
+            <div class="message-content">
+                please input the body part you want to make supplement
+            </div>
+        </div>`;
         // Handle the "No" button click event here
         // You can perform any actions you need when "No" is clicked
 

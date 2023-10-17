@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<!-- if user click button, the button will be highlighted -->
+<style>
+    input[type="checkbox"] {
+    display: none; /* Hide the default checkbox */
+}
+
+input[type="checkbox"] + label {
+    cursor: pointer;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin: 5px;
+    background-color: #f0f0f0;
+}
+
+input[type="checkbox"]:checked + label {
+    background-color: #2ecc71; /* Style when the checkbox is checked */
+    color: #fff;
+}
+
+/* Style the submit button */
+#submit {
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin-top: 10px;
+}
+
+#submit:hover {
+    background-color: #2980b9;
+}
+</style>
+
+
+<body>
+<div>
+    <!-- if user is authenticated, show the following -->
+    <!-- If the user is authenticated, show the following -->
+    <div>
+        {% if user.is_authenticated %}
+        <form id="bodyPartsForm">
+         {% csrf_token %}
+            <input type="checkbox" name="body_part" value="head" id="head">
+            <label for="head">Head</label>
+            <input type="checkbox" name="body_part" value="neck" id="neck">
+            <label for="neck">Neck</label>
+            <input type="checkbox" name="body_part" value="shoulder" id="shoulder">
+            <label for="shoulder">Shoulder</label>
+            <input type="checkbox" name="body_part" value="chest" id="chest">
+            <label for="chest">Chest</label>
+            <input type="checkbox" name="body_part" value="stomach" id="stomach">
+            <label for="stomach">Stomach</label>
+            <input type="checkbox" name="body_part" value="arm" id="arm">
+            <label for="arm">Arm</label>
+            <input type="checkbox" name="body_part" value="leg" id="leg">
+            <label for="leg">Leg</label>
+            <input type="checkbox" name="body_part" value="foot" id="foot">
+            <label for="foot">Foot</label>
+            <input type="checkbox" name="body_part" value="back" id="back">
+            <label for="back">Back</label>
+            <input type="checkbox" name="body_part" value="other" id="other">
+            <label for="other">Other</label>
+        </form>
+        <!-- Add a button to submit the form -->
+        <button id="submit">Submit</button>
+        {% else %}
+            <p>Please login</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 1. buttons make users to choose body part they feel uncomfortable -->
+
+
+</body>
+<script>
+    // if user click, submit, send get request with user name and body part to server, url is url + selection
+    var submit = document.getElementById("submit");
+    var baseurl = window.location.protocol + '//' + window.location.host;
+    var user_name = "{{ user.username }}";
+    submit.addEventListener("click", function () {
+        var bodyPartsForm = document.getElementById("bodyPartsForm");
+        var bodyParts = bodyPartsForm.elements["body_part"];
+        var bodyPart = "";
+        // iterate and transfer all checked body parts to server
+        for (var i = 0; i < bodyParts.length; i++) {
+            if (bodyParts[i].checked) {
+                bodyPart += bodyParts[i].value + ",";
+            }
+        }
+        // send get request to server and the parameter is user name and body part
+        var url = baseurl + "/user/" + user_name + "/" + "selection?body_part=" + bodyPart;
+
+        window.location.href = url;
+        // if the request is successful, redirect to the page of url, otherwise, alert error
+
+
+
+        // redirect to the page of url
+    });
+
+</script>
+
+</html>
