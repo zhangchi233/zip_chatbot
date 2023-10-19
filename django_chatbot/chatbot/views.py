@@ -112,8 +112,7 @@ def login(request):
 
 def register(request):
     if request.method == 'GET':
-        print("get")
-        print(request.GET.get('context'))
+
         return render(request, 'register.html')
     if request.method == 'POST':
         username = request.POST['username']
@@ -129,7 +128,7 @@ def register(request):
 
 
 
-                return redirect('chatbot')
+                return render(request, 'login.html')
             except:
                 error_message = 'Error creating account'
                 return render(request, 'register.html', {'error_message': error_message})
