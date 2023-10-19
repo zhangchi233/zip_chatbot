@@ -12,8 +12,14 @@ from django.http import HttpResponse
 from django.utils import timezone
 # import reverse
 from django.urls import reverse
-with open("/Users/asdfasd/django-chatbot/django_chatbot/api_key.txt", "r") as f:
+from django.conf import settings
+from django.urls import reverse
+BASE_DIR = str(settings.BASE_DIR)
+open_ai_key_path = BASE_DIR+"/api_key.txt"
+
+with open(open_ai_key_path, "r") as f:
     openai_api_key = f.read().strip()
+
 openai.api_key = openai_api_key
 from .models import Report
 def ask_openai(message,chats):
