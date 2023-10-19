@@ -15,18 +15,21 @@ from django.urls import reverse
 with open("/Users/asdfasd/django-chatbot/django_chatbot/api_key.txt", "r") as f:
     openai_api_key = f.read().strip()
 openai.api_key = openai_api_key
-
+from .models import Report
 def ask_openai(message,chats):
     response = openai.ChatCompletion.create(
-        model = "gpt-3.5-turbo",
+        model = "gpt-4",
         messages=[
             {"role": "system", "content": "You are an helpful professional and neutral cardiologist, and your job is"
                                           "to ask question to patient about their body condition to get the summary"
-                                          " of their health condition to help human cardiologis for better diagonsis."
+                                          " of their health condition to help human cardiologis for better diagonsis using Socrates Model."
                                           "you need to ask question according to the body part the patient selected first"
                                           "then, go to ask question in general, and once you ask enough question, you can"
                                           "you can give a summary of the patient's health condition. Remember, you are a real doctoc"
-                                          "so, ask in human way, and be kind to patient and be professional. ask question one by one"},
+                                          "so, ask in human way, and be kind to patient and be professional. and you can ask"
+                                          "remember that you need to ask one question each time and be careful to choose language you use"
+                                          "and you have to end the dialogue with summary and give indication whether the dailogue will continue or not"
+                                          "when we asked you whether the dialogue continue or not"},
             {"role": "assistant","content":"previous dialogues are: "+chats},
             {"role": "user", "content": message},
         ]
@@ -55,33 +58,41 @@ def chatbot(request,username):
         for chat in chats:
             z.append(chat.message)
             z.append(chat.response)
+        z.append(message)
         chat_messages = " \n ".join(z)
         response = ask_openai(message, chat_messages)
-
+        #response = "test"
         chat = Chat(user=request.user, message=message, starttime=starttime,
                     response=response, created_at=timezone.now())
         chat.save()
 
         print("chat messages are",chat_messages)
-        message_judge = "do you think based on the dialogue history it is enough to obtaine the" \
-                        "health condition ?, if yes, please type: 'yes, chatgpt will continue'," \
-                        " if no, please type: 'no, chatgpt will give summary' "
+        message_judge = " do you think based on the dialogue history it is enough to obtaine the health condition for cardiologist ?, " \
+                        " don't be too long nor too short to end questioning," \
+                        " and remeber you need to ask question from specific to general " \
+                        " if you think the information is not enough,please type: 'yes, chatgpt will continue' " \
+                        " if you think the information is enough please type: 'no, chatgpt will give summary' please be cautious as possible"
+
 
         response_continue = ask_openai(message_judge,chat_messages)
+        #response_continue = "test"
         print("response continue is",response_continue)
         if "yes, chatgpt will continue" in response_continue:
             return JsonResponse({'message': message, 'response': response,'conversation':False})
-        if True:
+        else:
             summary_message = "given the conversation above, please give a summary of the patient's health condition in the " \
-                              "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her "
+                              "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her " \
+                              "based on chat history, you can print summary in multi linguistic way, but please make sure the english version " \
+                              "appeared"
             response = ask_openai(summary_message, chat_messages)
+            #response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
             chat = Chat(user=request.user, message=message, starttime=starttime,
                         response=response, created_at=timezone.now())
             chat.save()
             print("message is", message)
             response = response
-            return JsonResponse({'message': message, 'response': response, 'conversation': True})
-    return render(request, 'chatbot.html', {'chats': chats})
+            return JsonResponse({'starttime':str(starttime),'message': message, 'response': response, 'conversation': True})
+    return render(request, 'chatbot.html', {'starttime':str(starttime),'chats': chats})
 
 
 def login(request):
@@ -135,15 +146,13 @@ def logout(request):
 def upload_image(request):
 
     if request.method =="POST":
-        form = ReportForm(request.POST, request.FILES)
-        print(form.is_valid())
-        if form.is_valid():
+        image = request.FILES.get('images')
+        user = request.user
+        report = request.POST.get('report')
+        file = Report(user=user,report=report,images=image)
+        file.save()
 
-            report = form.save(commit=False)
-
-            #report.user ="maxzhang"  # Assuming user authentication is in place
-            report.save()
-            return render(request,'add_user_image.html')  # Redirect to a page showing all reports
+        return redirect("login")  # Redirect to a page showing all reports
     return render(request,'add_user_image.html')
 def chatbot_view(request,username):
     # redirect to chatbot page
@@ -152,7 +161,7 @@ def chatbot_view(request,username):
     context['body_part'] = request.GET.get('body_part')
     starttime = datetime.datetime.now()
     context['starttime'] = str(datetime.datetime.now())
-    first_message = "I have a pain in my " + context['body_part']
+    first_message = "I have a complain in my " + context['body_part'] # i have complain in this part
     #write to database
     print("first message is",first_message)
     response = ask_openai(first_message, "there is no previous message,"
@@ -169,4 +178,5 @@ def chatbot_view(request,username):
     # create a http response
     # redirect to chatbot page
     #return redirect("chatbot")
+    print("context is :", chats)
     return render(request,'chatbot.html',context)
