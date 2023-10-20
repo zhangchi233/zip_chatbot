@@ -3,6 +3,7 @@ import json
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 import openai
+import pandas as pd
 from .forms import ReportForm
 from django.contrib import auth
 from django.contrib.auth.models import User
@@ -12,14 +13,18 @@ from django.http import HttpResponse
 from django.utils import timezone
 # import reverse
 from django.urls import reverse
-with open("/Users/asdfasd/django-chatbot/django_chatbot/api_key.txt", "r") as f:
+from django.conf import settings
+from django.urls import reverse
+BASE_DIR = str(settings.BASE_DIR)
+open_ai_key_path = BASE_DIR+"/api_key.txt"
+
+with open(open_ai_key_path, "r") as f:
     openai_api_key = f.read().strip()
 openai.api_key = openai_api_key
 from .models import Report
+
 def ask_openai(message,chats):
-    response = openai.ChatCompletion.create(
-        model = "gpt-4",
-        messages=[
+    messages = [
             {"role": "system", "content": "You are an helpful professional and neutral cardiologist, and your job is"
                                           "to ask question to patient about their body condition to get the summary"
                                           " of their health condition to help human cardiologis for better diagonsis using Socrates Model."
@@ -30,10 +35,28 @@ def ask_openai(message,chats):
                                           "remember that you need to ask one question each time and be careful to choose language you use"
                                           "and you have to end the dialogue with summary and give indication whether the dailogue will continue or not"
                                           "when we asked you whether the dialogue continue or not"},
-            {"role": "assistant","content":"previous dialogues are: "+chats},
-            {"role": "user", "content": message},
-        ]
+            {"role": "assistant","content":"be careful to choose language you use, "
+                                           "and you have to end the dialogue with summary and "
+                                           "give indication whether the dailogue will continue or not"
+                                           "you need to give an indication whether the dialogue will continue or not in the beginning in such way:"
+                                           "if you think the dialogue will continue, add: 'yes, chatgpt will continue \n' in the beginning"
+                                           "if you think the dialogue don't need to be continued, add: 'no, chatgpt will give summary \n' in the beginning"
+                                           "please be cautious as possible, and remember to ask question one by one and collect enough information to give summary of "
+                                           "the patient's health condition for cardiologist"},
+]
+
+    #for chat in chats:
+
+    #    role = chat["role"]
+    #    content = chat['content']
+    #    messages.append({"role":role,"content":content})
+    messages.append({"role":"user","content":message})
+    print("messages are",messages)
+    response = openai.ChatCompletion.create(
+        model = "gpt-4",
+        messages=messages
     )
+    print("response is",response)
     
     answer = response.choices[0].message.content.strip()
     return answer
@@ -56,10 +79,10 @@ def chatbot(request,username):
         chats = chats.order_by('created_at')
         z = []
         for chat in chats:
-            z.append(chat.message)
-            z.append(chat.response)
-        z.append(message)
-        chat_messages = " \n ".join(z)
+            z.append({"role":"user","content":chat.message})
+            z.append({"role":"assistant","content":chat.response})
+
+        chat_messages = z
         response = ask_openai(message, chat_messages)
         #response = "test"
         chat = Chat(user=request.user, message=message, starttime=starttime,
@@ -67,14 +90,14 @@ def chatbot(request,username):
         chat.save()
 
         print("chat messages are",chat_messages)
-        message_judge = " do you think based on the dialogue history it is enough to obtaine the health condition for cardiologist ?, " \
-                        " don't be too long nor too short to end questioning," \
-                        " and remeber you need to ask question from specific to general " \
-                        " if you think the information is not enough,please type: 'yes, chatgpt will continue' " \
-                        " if you think the information is enough please type: 'no, chatgpt will give summary' please be cautious as possible"
+        #message_judge = " do you think based on the dialogue history it is enough to obtaine the health condition for cardiologist ?, " \
+        #                " don't be too long nor too short to end questioning," \
+        #                " and remeber you need to ask question from specific to general " \
+        #                " if you think the information is not enough,please type: 'yes, chatgpt will continue' " \
+        #                " if you think the information is enough please type: 'no, chatgpt will give summary' please be cautious as possible"
 
-
-        response_continue = ask_openai(message_judge,chat_messages)
+        response_continue = response.split("\n")[0]
+        #response_continue = ask_openai(message_judge,chat_messages)
         #response_continue = "test"
         print("response continue is",response_continue)
         if "yes, chatgpt will continue" in response_continue:
@@ -86,7 +109,7 @@ def chatbot(request,username):
                               "appeared"
             response = ask_openai(summary_message, chat_messages)
             #response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
-            chat = Chat(user=request.user, message=message, starttime=starttime,
+            chat = Chat(user=request.user, message=summary_message, starttime=starttime,
                         response=response, created_at=timezone.now())
             chat.save()
             print("message is", message)
@@ -103,7 +126,13 @@ def login(request):
         if user is not None:
             auth.login(request, user)
             #return redirect('chatbot')
-            return render(request,'select_body.html')
+            question_path = BASE_DIR + "/questionnaire/questionnaire.csv"
+            questionnaire = pd.read_csv(question_path,delimiter=';')
+            bodyparts = questionnaire['body_part'].unique()
+            bodyparts = bodyparts.tolist()
+
+
+            return render(request,'select_body.html',{"bodyparts":bodyparts})
         else:
             error_message = 'Invalid username or password'
             return render(request, 'login.html', {'error_message': error_message})
@@ -128,7 +157,7 @@ def register(request):
 
 
 
-                return render(request, 'login.html')
+                return redirect('login')
             except:
                 error_message = 'Error creating account'
                 return render(request, 'register.html', {'error_message': error_message})
@@ -162,11 +191,11 @@ def chatbot_view(request,username):
     context['starttime'] = str(datetime.datetime.now())
     first_message = "I have a complain in my " + context['body_part'] # i have complain in this part
     #write to database
-    print("first message is",first_message)
-    response = ask_openai(first_message, "there is no previous message,"
-                                         "but remember to ask question one by one")
+
+    first_history = {"role":"user","content":first_message}
+    response = ask_openai(first_message, [first_history])
     #response = "wait for test"
-    print(response)
+
     chat = Chat(user=request.user, message=first_message, starttime=starttime,created_at=timezone.now(),response=response)
     chat.save()
     chats = []

@@ -6,9 +6,14 @@
 </head>
 <!-- if user click button, the button will be highlighted -->
 <style>
-    input[type="checkbox"] {
-    display: none; /* Hide the default checkbox */
+
+.modal {
+  display: none;
+    padding: 20px;
+
 }
+
+
 
 input[type="checkbox"] + label {
     cursor: pointer;
@@ -49,26 +54,22 @@ input[type="checkbox"]:checked + label {
         {% if user.is_authenticated %}
         <form id="bodyPartsForm">
          {% csrf_token %}
-            <input type="checkbox" name="body_part" value="head" id="head">
-            <label for="head">Head</label>
-            <input type="checkbox" name="body_part" value="neck" id="neck">
-            <label for="neck">Neck</label>
-            <input type="checkbox" name="body_part" value="shoulder" id="shoulder">
-            <label for="shoulder">Shoulder</label>
-            <input type="checkbox" name="body_part" value="chest" id="chest">
-            <label for="chest">Chest</label>
-            <input type="checkbox" name="body_part" value="stomach" id="stomach">
-            <label for="stomach">Stomach</label>
-            <input type="checkbox" name="body_part" value="arm" id="arm">
-            <label for="arm">Arm</label>
-            <input type="checkbox" name="body_part" value="leg" id="leg">
-            <label for="leg">Leg</label>
-            <input type="checkbox" name="body_part" value="foot" id="foot">
-            <label for="foot">Foot</label>
-            <input type="checkbox" name="body_part" value="back" id="back">
-            <label for="back">Back</label>
-            <input type="checkbox" name="body_part" value="other" id="other">
-            <label for="other">Other</label>
+            <!-- firest select male or female first-->
+            <label>choose gender:</label>
+            <select name="gender" id = "gender">
+                <option value="male">male</option>
+                <option value="female">female</option>
+            </select>
+
+            {% for bodypart in bodyparts %}
+            <input type="checkbox" name="body_part" value="{{ bodypart }}" id="{{ bodypart }}">
+            <label for="{{ bodypart }}">{{ bodypart }}</label>
+                <!-- add specific questions of corresponding body part in according to csv file -->
+
+                <div id="{{ bodypart }} div" class="modal">
+
+                </div>
+            {% endfor %}
         </form>
         <!-- Add a button to submit the form -->
         <button id="submit">Submit</button>
@@ -83,6 +84,75 @@ input[type="checkbox"]:checked + label {
 
 </body>
 <script>
+    // the questionnaire is pd.read_csv from the server
+    var bodyparts = document.getElementsByName("body_part");
+    // if user click, the button will be highlighted and send response to server
+    // to get the response of sepcefic question of that body part and show it on the page
+    bodyparts.forEach(function (bodypart) {
+        bodypart.addEventListener("click", function () {
+            var baseurl = window.location.protocol + '//' + window.location.host;
+            console.log(baseurl);
+            // get gender accourding to user's selection
+            var selection = document.getElementById("gender")
+            // value of <selection>
+            var gender = selection.options[selection.selectedIndex].value;
+            // questionDiv is the div block of specific question of that body part
+
+            var questionDiv = document.getElementById(bodypart.value+" div");
+
+            console.log(questionDiv);
+            if(questionDiv.style.display == "block"){
+                questionDiv.style.display = "none";
+                return;
+            } else{
+                questionDiv.style.display = "block";
+                // if the questionDiv has child element is not empty, return
+                if(questionDiv.children.length > 0){
+                    return;
+                }
+            }
+
+
+
+            var user_name = "{{ user.username }}";
+            var url = baseurl + "/login/" + user_name + "?bodypart="+ bodypart.value+"&gender="+gender;
+            console.log(url);
+            // send get request to server and the parameter is user name and body part
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+            xhr.send();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+
+                    var response = xhr.responseText;
+                    response = JSON.parse(response);
+                    var questions = response["questions"];
+                    console.log(questions);
+                    for (var i = 0; i < questions.length; i++) {
+                        var question = questions[i];
+
+                        // append selected button to questiondiv block
+                        console.log(question);
+
+                        var questionP = document.createElement("input");
+                        questionP.type = "checkbox";
+                        questionP.name = "body_part";
+                        questionP.value = question;
+                        var questionLabel = document.createElement("label");
+                        questionLabel.innerHTML = question;
+
+                        questionP.innerHTML = question;
+                        questionDiv.appendChild(questionP);
+                        questionDiv.appendChild(questionLabel);
+
+                    }
+
+                }
+            }
+        });
+    });
+
+
     // if user click, submit, send get request with user name and body part to server, url is url + selection
     var submit = document.getElementById("submit");
     var baseurl = window.location.protocol + '//' + window.location.host;
@@ -99,7 +169,7 @@ input[type="checkbox"]:checked + label {
         }
         // send get request to server and the parameter is user name and body part
         var url = baseurl + "/user/" + user_name + "/" + "selection?body_part=" + bodyPart;
-
+        console.log(url);
         window.location.href = url;
         // if the request is successful, redirect to the page of url, otherwise, alert error
 
