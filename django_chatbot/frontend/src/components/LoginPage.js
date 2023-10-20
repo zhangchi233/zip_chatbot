@@ -61,7 +61,7 @@ export default class LoginPage extends Component {
         .then(data => {
             if (data.token) {
                 console.log("Successfully logged in!");
-                this.setState({ token: data.token });
+                this.setLoginData(data.token, this.state.username);
                 this.props.history.push("/chatbot");
             } else {
                 this.setState({
@@ -83,12 +83,18 @@ export default class LoginPage extends Component {
         });
         
     }
-    
+    setLoginData = (token, username) => {
+        this.setState({ token, username });
+    };
 
     render() {
         return (
             <>
-            <TokenContext.Provider value={this.state.token}>
+            <TokenContext.Provider value={{ 
+            token: this.state.token, 
+            username: this.state.username, 
+            setLoginData: this.setLoginData 
+        }}>
             <Link to="/register" className="signupLink">New User? Sign Up</Link>
             <Grid container spacing={3} direction="column" alignItems="center" justify="center" style={{ minHeight: '100vh' }} className='rightAlignGrid'>
                 <Typography variant="h4" component="h1" gutterBottom>

@@ -24,6 +24,7 @@ from django.contrib.auth import logout
 
 
 
+
 # from django.http import HttpResponse
 
 from django.utils import timezone
@@ -37,6 +38,8 @@ openai.api_key = openai_api_key
 class ChatView(generics.ListAPIView):
     serializer_class = ChatSerializer
     queryset = Chat.objects.all()
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
     def post(self, request):
@@ -67,7 +70,13 @@ def openai_chat_endpoint(request):
     chats = Chat.objects.filter(user=request.user, starttime__date=starttime.date(),
                                 starttime__hour=starttime.hour, starttime__minute=starttime.minute,
                                 starttime__second=starttime.second).order_by('created_at')
-    
+    if not chats.exists():
+        body_part = data.get('body_part', 'unspecified body part')
+        message = "I have a pain in my " + body_part
+        response = ask_openai(message, "there is no previous message, but remember to ask question one by one")
+        chat = Chat(user=request.user, message=message, starttime=starttime, created_at=timezone.now(), response=response)
+        chat.save()
+        return JsonResponse({'message': message, 'response': response, 'conversation': False})
     # Prepare the previous dialogues for context
     z = []
     for chat in chats:
@@ -203,6 +212,14 @@ def chatbot_view(request,username):
     # redirect to chatbot page
     #return redirect("chatbot")
     return render(request,'chatbot.html',context)
+
+class LastTenChatsView(generics.ListAPIView):
+    serializer_class = ChatSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Chat.objects.filter(user=user).order_by('-created_at')[:10]
+
 
 def upload_image(request):
 

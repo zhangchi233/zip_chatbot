@@ -15,10 +15,11 @@ import Fade from '@material-ui/core/Fade';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Link from '@material-ui/core/Link';
+import TokenContext from './TokenContext';
 
 import InteractiveBody from './InteractiveBody'
 
-
+const BASE_API_URL = 'http://127.0.0.1:8000/api/'
 export default class ChatBotPage extends Component {
     
     constructor(props) {
@@ -71,7 +72,13 @@ export default class ChatBotPage extends Component {
     handleClose = () => {
         this.setState({ showModal: false });
     }
+    handleDownloadReport = () => {
+        window.open('/api/download_report', '_blank');  // Opens a new window or tab to download the report
+    }
 
+    handleClearChat = () => {
+        this.setState({ messages: [] });
+    }
     handleKeyDown = (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();  // prevent new line
@@ -121,7 +128,30 @@ export default class ChatBotPage extends Component {
             });
         }
     }
-    
+    static contextType = TokenContext;
+    componentDidMount()  {
+        // Fetch the last 10 interactions for the user
+        const username = this.context.username;
+        if (username) {
+            this.fetchUserInteractions(username);
+        }
+    }
+    fetchUserInteractions = (username) => {
+        authenticatedFetch(`api/interactions?username=${username}&limit=10`, {
+            method: "GET",
+            headers: {
+                'Authorization': `Token ${this.context}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Assuming the API returns the interactions as a list (adjust according to your backend response)
+            this.setState({ messages: data });
+        })
+        .catch(error => {
+            console.error("Error fetching user interactions:", error);
+        });
+    };
     
     render() {
         const { messages, inputMessage } = this.state;
@@ -145,6 +175,13 @@ export default class ChatBotPage extends Component {
                     </Typography>
                     <Button className="body-button" variant="contained" color="primary" onClick={this.handleShowBody}>
                         Show Anatomy
+                    </Button>
+                    <Button className="body-button" variant="contained" color="primary" onClick={this.handleDownloadReport}>
+                        Download Report
+                    </Button>
+
+                    <Button className="body-button" variant="contained" color="primary" onClick={this.handleClearChat}>
+                        Clear Chat
                     </Button>
                 </div>
                 <Paper className="chat-container" style={{ height: '75%', width: '90%', overflowY: 'auto', marginBottom: '20px' }}>
