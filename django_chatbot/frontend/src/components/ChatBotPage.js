@@ -1,0 +1,204 @@
+import React, { Component, useContext } from 'react';
+import Button from "@material-ui/core/Button";
+import Grid from "@material-ui/core/Grid";
+import Typography from "@material-ui/core/Typography";
+import TextField from "@material-ui/core/TextField";
+import Paper from "@material-ui/core/Paper";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemText from "@material-ui/core/ListItemText";
+import './ChatBotPage.css';
+import { authenticatedFetch } from './csrfTokenUtility.js';
+import Modal from '@material-ui/core/Modal';
+import Backdrop from '@material-ui/core/Backdrop';
+import Fade from '@material-ui/core/Fade';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Link from '@material-ui/core/Link';
+
+import InteractiveBody from './InteractiveBody'
+
+
+export default class ChatBotPage extends Component {
+    
+    constructor(props) {
+        super(props);
+        this.state = {
+            messages: [{text: "LLMbq. Welcome to the Medical Assistant !. Please select the body part you have complaints about", sender: 'bot'}],
+            inputMessage: "",
+            showModal: true,
+            bodyPart: "",
+            bodyPartSelected: false,
+            
+        };
+    }
+
+    handleInputChange = (event) => {
+        this.setState({
+            inputMessage: event.target.value
+        });
+    }
+
+    handleSend = () => {
+        const { messages, inputMessage } = this.state;
+        this.setState(prevState => ({
+            messages: [...prevState.messages, {text: inputMessage, sender: 'user'}],
+            inputMessage: ""
+        }));
+        if (inputMessage.trim()) {
+            const currentDateTime = new Date().toISOString().replace('T', ' ').replace('Z', '');
+
+            // Send the input message to the Django backend
+            authenticatedFetch("/api/openai", {
+                method: "POST",
+                headers: {
+                    'Authorization': `Token ${this.context}`
+                },
+                body: JSON.stringify({ message: inputMessage, starttime: currentDateTime })
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.setState(prevState => ({
+                    messages: [...prevState.messages, {text: data.response, sender: 'bot'}],
+        
+                }));
+            });
+        }
+    }
+    handleShowBody = () => {
+        this.setState({ showModal: true });
+    }
+    handleClose = () => {
+        this.setState({ showModal: false });
+    }
+
+    handleKeyDown = (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();  // prevent new line
+            this.handleSend();
+        }
+    }
+        handleLogout = () => {
+            // Make a request to the Django backend to logout
+            authenticatedFetch("/api/logout", {
+                method: "POST",
+                headers: {
+                    'Authorization': `Token ${this.context}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Delete the token from local storage (assuming you saved it there upon login)
+                    this.setState({ token: null });
+        
+                    // Redirect to the login page
+                    this.props.history.push("/login");
+                } else {
+                    console.error('Logout failed:', data.message);
+                }
+            });
+        }
+    
+    handleBodyPartClick = (part) => {
+            this.setState({ 
+                bodyPart: part, 
+                inputMessage: `I have pain in my ${part}`, 
+                bodyPartSelected: true 
+            });
+
+    }
+    handleClearSelection = () => {
+        this.setState({ bodyPartSelected: false, bodyPart: "", inputMessage: "" });
+    }
+    
+    componentDidUpdate(prevProps, prevState) {
+        // Check if the modal was closed and a body part was previously selected
+        if (prevState.showModal && !this.state.showModal && this.state.bodyPartSelected) {
+            this.handleSend();
+            this.setState({
+                bodyPartSelected: false // Reset the flag after sending the message
+            });
+        }
+    }
+    
+    
+    render() {
+        const { messages, inputMessage } = this.state;
+
+        return (
+            <>
+            
+
+            <Grid container spacing={3} direction="column" alignItems="center" justify="center" style={{ minHeight: '100vh' }}>
+                
+                {/* Only Logout Link here */}
+                <div style={{ width: '90%', display: 'flex', justifyContent: 'flex-end' }}>
+                    <Link href="#" onClick={this.handleLogout} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                        Logout
+                    </Link>
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '50%' }}>
+                    <Typography variant="h4" component="h1" gutterBottom>
+                        
+                    </Typography>
+                    <Button className="body-button" variant="contained" color="primary" onClick={this.handleShowBody}>
+                        Show Anatomy
+                    </Button>
+                </div>
+                <Paper className="chat-container" style={{ height: '75%', width: '90%', overflowY: 'auto', marginBottom: '20px' }}>
+                    <List>
+                        {messages.map((message, index) => (
+                            <ListItem className={`message ${message.sender}`} key={index}>
+                                <ListItemText primary={message.text} secondary={message.sender === 'user' ? 'Patient' : 'LLMbq'} />
+                            </ListItem>
+                        ))}
+                    </List>
+                </Paper>
+                <Grid className="input-container" container direction="row" alignItems="center" justify="center" spacing={2} style={{ width: '80%', position: 'fixed', bottom: '10px', background: '#fff' }}>
+                    <Grid item xs={9}>
+                        <TextField className="input-field"
+                            fullWidth
+                            variant="outlined"
+                            value={inputMessage}
+                            onChange={this.handleInputChange}
+                            onKeyDown={this.handleKeyDown}
+                            placeholder="Type your message..."
+                            style={{ backgroundColor: '#f0f0f0' }}
+                        />
+                    </Grid>
+                    <Grid item xs={3} direction='row'>
+                        <Button className="send-button" variant="contained" color="primary" fullWidth onClick={this.handleSend}>
+                            Send
+                        </Button>
+                        
+                    </Grid>        
+                </Grid>
+            </Grid>
+            <Modal
+                    aria-labelledby="interactive-body-modal"
+                    open={this.state.showModal}
+                    onClose={this.handleClose}
+                    closeAfterTransition
+                    BackdropComponent={Backdrop}
+                    BackdropProps={{
+                        timeout: 500,
+                    }}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
+                >
+                    <Fade in={this.state.showModal}>
+                        <div style={{ outline: 'none', backgroundColor: 'white', padding: '20px', borderRadius: '10px' }}>
+                        <InteractiveBody  onPartClick={this.handleBodyPartClick} onClearSelection={this.handleClearSelection} />
+                        </div>
+                    </Fade>
+            </Modal>
+        </>
+
+        );
+    }
+}

@@ -1,0 +1,32 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f5f5f5;
+    position: fixed;
+}
+
+
+a {
+    text-decoration: none;
+    color: #3f51b5;
+    margin-top: 10px;
+    display: inline-block;
+}
+
+button {
+    border-radius: 25px;
+    transition: 0.3s; 
+}
+
+button:hover {
+    background-color: #007BFF; 
+    color: #fff; 
+}
+.signupLink {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: #3f51b5; /* or any other color you prefer */
+    cursor: pointer;
+    font-weight: bold;
+}
+

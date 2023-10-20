@@ -1,0 +1,44 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f5f5f5;
+    position: fixed;
+}
+
+.front path {
+    fill: transparent;
+    stroke: none;
+    transition: fill 0.3s;
+  }
+  
+  .front path:hover {
+    fill: #FF0000;
+    opacity: 0.3;
+  }
+svg {
+    z-index: 10;
+}
+.buttonContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.buttonContainer .MuiButton-root {
+    margin: 0 10px;
+    padding: 10px 20px;
+    background-color: #1976d2; /* This is a default Material-UI primary color */
+    color: white;
+    border-radius: 5px;
+    transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.buttonContainer .MuiButton-root:hover {
+    background-color: #1565c0; /* A bit darker for hover effect */
+    transform: scale(1.05);
+}
+
+.buttonContainer .MuiButton-root:active {
+    background-color: #0d47a1; /* Even darker for active state */
+    transform: scale(1);
+}
