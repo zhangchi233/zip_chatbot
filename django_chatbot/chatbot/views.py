@@ -33,30 +33,27 @@ def ask_openai(message,chats):
                                           "you can give a summary of the patient's health condition. Remember, you are a real doctoc"
                                           "so, ask in human way, and be kind to patient and be professional. and you can ask"
                                           "remember that you need to ask one question each time and be careful to choose language you use"
-                                          "and you have to end the dialogue with summary and give indication whether the dailogue will continue or not"
-                                          "when we asked you whether the dialogue continue or not"},
-            {"role": "assistant","content":"be careful to choose language you use, "
-                                           "and you have to end the dialogue with summary and "
-                                           "give indication whether the dailogue will continue or not"
-                                           "you need to give an indication whether the dialogue will continue or not in the beginning in such way:"
-                                           "if you think the dialogue will continue, add: 'yes, chatgpt will continue \n' in the beginning"
-                                           "if you think the dialogue don't need to be continued, add: 'no, chatgpt will give summary \n' in the beginning"
+                                          "and you have to end the dialogue with summary "
+                                          },
+            {"role":"assistant","content":"you give indication whether the dailogue will continue or not in the beginning in such way of any true response:"
+                                          "if you think the dialogue will continue, add an indication: 'yes, chatgpt will continue \n' in the beginning"
+                                           "if you think the dialogue don't need to be continued, add an indication: 'no, chatgpt will give summary \n' in the beginning"
+                                           "no matter what content you type, what language you use, you need to add the indication in english in the beginning"
+                                           "for example: 'yes, chatgpt will continue \n 请问你的眩晕持续多久了呢' or 'no, chatgpt will give summary \n 好的我了解你的情况了'"
                                            "please be cautious as possible, and remember to ask question one by one and collect enough information to give summary of "
                                            "the patient's health condition for cardiologist"},
-]
+            {"role": "assistant","content":"here is previous conversation history:"+chats},
+            {"role":"user","content":message},
+            ]
 
-    #for chat in chats:
 
-    #    role = chat["role"]
-    #    content = chat['content']
-    #    messages.append({"role":role,"content":content})
-    messages.append({"role":"user","content":message})
-    print("messages are",messages)
+    #messages.append({"role":"user","content":message})
+    #print("messages are",messages)
     response = openai.ChatCompletion.create(
         model = "gpt-4",
         messages=messages
     )
-    print("response is",response)
+
     
     answer = response.choices[0].message.content.strip()
     return answer
@@ -79,42 +76,69 @@ def chatbot(request,username):
         chats = chats.order_by('created_at')
         z = []
         for chat in chats:
-            z.append({"role":"user","content":chat.message})
-            z.append({"role":"assistant","content":chat.response})
+            z.append(chat.message)
+            z.append(chat.response)
 
-        chat_messages = z
+        chat_messages = "\n".join(z)
         response = ask_openai(message, chat_messages)
         #response = "test"
+
+
+
+
+        response_continue = response.split("\n")[0]
+
+        print("response continue is", response_continue)
+        print("response is", response)
+        response = "\n".join(response.split("\n")[1:]).strip()
         chat = Chat(user=request.user, message=message, starttime=starttime,
                     response=response, created_at=timezone.now())
         chat.save()
 
-        print("chat messages are",chat_messages)
-        #message_judge = " do you think based on the dialogue history it is enough to obtaine the health condition for cardiologist ?, " \
-        #                " don't be too long nor too short to end questioning," \
-        #                " and remeber you need to ask question from specific to general " \
-        #                " if you think the information is not enough,please type: 'yes, chatgpt will continue' " \
-        #                " if you think the information is enough please type: 'no, chatgpt will give summary' please be cautious as possible"
-
-        response_continue = response.split("\n")[0]
-        #response_continue = ask_openai(message_judge,chat_messages)
         #response_continue = "test"
-        print("response continue is",response_continue)
+        response_continue = response_continue.lower()
         if "yes, chatgpt will continue" in response_continue:
             return JsonResponse({'message': message, 'response': response,'conversation':False})
         else:
-            summary_message = "given the conversation above, please give a summary of the patient's health condition in the " \
-                              "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her " \
-                              "based on chat history, you can print summary in multi linguistic way, but please make sure the english version " \
-                              "appeared"
-            response = ask_openai(summary_message, chat_messages)
-            #response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
-            chat = Chat(user=request.user, message=summary_message, starttime=starttime,
-                        response=response, created_at=timezone.now())
-            chat.save()
-            print("message is", message)
-            response = response
-            return JsonResponse({'starttime':str(starttime),'message': message, 'response': response, 'conversation': True})
+            if "no, chatgpt will give summary" in response_continue:
+                summary_message = "given the conversation above, please give a summary of the patient's health condition in the " \
+                                  "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her " \
+                                  "based on chat history, you can print summary in multi linguistic way, but please make sure the english version " \
+                                  "appeared"
+                response = ask_openai(summary_message, chat_messages)
+                # response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
+                chat = Chat(user=request.user, message=summary_message, starttime=starttime,
+                            response=response, created_at=timezone.now())
+                chat.save()
+                response = response
+                return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response, 'conversation': True})
+
+
+            else:
+                message_judge = " do you think based on the dialogue history it is enough to obtaine the health condition for cardiologist ?, " \
+                                " don't be too long nor too short to end questioning," \
+                                " and remeber you need to ask question from specific to general " \
+                                " if you think the information is not enough,please type: 'yes, chatgpt will continue' " \
+                                " if you think the information is enough please type: 'no, chatgpt will give summary' please be cautious as possible"
+                response_continue = ask_openai(message_judge, chat_messages+"\n"+response_continue+"\n"+response)
+                if "yes, chatgpt will continue" in response_continue:
+                    response = ask_openai("repeat your question, doctor?", chat_messages + "\n" + response_continue + "\n" + response)
+                    return JsonResponse({'message': message, 'response': response,'conversation':False})
+
+
+
+                summary_message = "given the conversation above, please give a summary of the patient's health condition in the " \
+                                  "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her " \
+                                  "based on chat history, you can print summary in multi linguistic way, but please make sure the english version " \
+                                  "appeared"
+                response = ask_openai(summary_message, chat_messages)
+                #response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
+                chat = Chat(user=request.user, message=summary_message, starttime=starttime,
+                            response=response, created_at=timezone.now())
+                chat.save()
+
+                response = response
+                return JsonResponse({'starttime':str(starttime),'message': message, 'response': response, 'conversation': True})
     return render(request, 'chatbot.html', {'starttime':str(starttime),'chats': chats})
 
 
@@ -192,14 +216,16 @@ def chatbot_view(request,username):
     first_message = "I have a complain in my " + context['body_part'] # i have complain in this part
     #write to database
 
-    first_history = {"role":"user","content":first_message}
-    response = ask_openai(first_message, [first_history])
+    first_history = "no previous history, this is the first message"
+    response = ask_openai(first_message, first_history)
     #response = "wait for test"
-
+    response = response.split("\n")[1:]
+    response = "\n".join(response)
     chat = Chat(user=request.user, message=first_message, starttime=starttime,created_at=timezone.now(),response=response)
     chat.save()
     chats = []
     chats.append(first_message)
+
     chats.append(response)
     context['chats'] = Chat.objects.filter(user=request.user,starttime=starttime)
     # response context
