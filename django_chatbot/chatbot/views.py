@@ -88,7 +88,8 @@ class OpenaiView(APIView):
         response_continue = response_continue.lower()
         # response_continue = "yes, chatgpt will continue"
         if "yes, chatgpt will continue" in response_continue:
-            return JsonResponse({'message': message, 'response': response,'conversation':False})
+            # added Timezone.now() to the context
+            return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response,'conversation':False})
         else:
             if "no, chatgpt will give summary" in response_continue:
                 summary_message = "given the conversation above, please give a summary of the patient's health condition in the " \
@@ -113,7 +114,8 @@ class OpenaiView(APIView):
                 response_continue = ask_openai(message_judge, chat_messages+"\n"+response_continue+"\n"+response)
                 if "yes, chatgpt will continue" in response_continue:
                     response = ask_openai("repeat your question, doctor?", chat_messages + "\n" + response_continue + "\n" + response)
-                    return JsonResponse({'message': message, 'response': response,'conversation':False})
+                    # added Timezone.now() to the context
+                    return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response,'conversation':False})
 
 
 
@@ -156,7 +158,8 @@ class OpenaiView(APIView):
         # redirect to chatbot page
         #return redirect("chatbot")
         print("context is :", chats)
-        return JsonResponse({'message': context['message'], 'response': response, 'conversation': False})
+        # added Timezone.now() to the context
+        return JsonResponse({'starttime': str(starttime), 'message': context['message'], 'response': response, 'conversation': False})
 
 
 @method_decorator(csrf_exempt, name='dispatch')

@@ -25,7 +25,7 @@ export default class ChatBotPage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            messages: [{text: "LLMbq. Welcome to the Medical Assistant !. Please select the body part you have complaints about", sender: 'bot'}],
+            messages: [],
             inputMessage: "",
             showModal: true,
             bodyPart: "",
@@ -39,24 +39,39 @@ export default class ChatBotPage extends Component {
             inputMessage: event.target.value
         });
     }
-
+    getCurrentDateTime = () => {
+        var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
+        console.log(tzoffset)
+        const currentDateTime = (new Date(Date.now() - tzoffset)).toISOString().replace('T', ' ').replace('Z', '');
+        console.log(currentDateTime)
+        return currentDateTime;
+    }
+    saveMessagesLocally = (messages) => {
+        // Save the messages to local storage
+        localStorage.setItem('messages', JSON.stringify(messages));
+    }
+    getMessagesFromLocalStorage = () => {
+        const storedMessages = localStorage.getItem('messages');
+        return storedMessages ? JSON.parse(storedMessages) : [];
+    }
     handleSend = () => {
+        const currentDateTime = this.getCurrentDateTime();
         const { messages, inputMessage } = this.state;
-        const newMessages = [...messages, {text: inputMessage, sender: 'user'}];
-        this.setState(({
+        const newMessages = [...messages, {text: inputMessage, sender: 'user', time: currentDateTime}];
+        this.setState({
             messages: newMessages,
             inputMessage: ""
-        }));
-        const userMessageCount = newMessages.filter(message => message.sender === 'user').length;
+        }, () => { // Using callback form of setState to ensure we have the latest state
+            this.saveMessagesLocally(this.state.messages);
+        });
+        // Count the number of messages sent by the user
+        const userMessageCount = newMessages.filter(message => message.sender === 'user').length; 
         this.setState({ nmessages: userMessageCount });
         console.log(userMessageCount);
         console.log("hello")
 
         if (inputMessage.trim()) {
-            var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
-            console.log(tzoffset)
-            const currentDateTime = (new Date(Date.now() - tzoffset)).toISOString().replace('T', ' ').replace('Z', '');
-            console.log(currentDateTime)
+            
 
             // Send the input message to the Django backend
             authenticatedFetch("/api/openai", {
@@ -68,10 +83,12 @@ export default class ChatBotPage extends Component {
             })
             .then(response => response.json())
             .then(data => {
+                const botTime = this.getCurrentDateTime();
                 this.setState(prevState => ({
-                    messages: [...prevState.messages, {text: data.response, sender: 'bot'}],
-        
-                }));
+                    messages: [...prevState.messages, { text: data.response, sender: 'bot', time: data.starttime }],
+                }), () => {
+                    this.saveMessagesLocally(this.state.messages);  // Save the messages to local storage
+                });
             });
         }
     }
@@ -94,29 +111,31 @@ export default class ChatBotPage extends Component {
             this.handleSend();
         }
     }
-        handleLogout = () => {
-            // Make a request to the Django backend to logout
-            authenticatedFetch("/api/logout", { 
-                method: "POST",
-                headers: {
-                    'Authorization': `Token ${this.context.token}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // Delete the token from local storage (assuming you saved it there upon login)
-                    // localStorage.removeItem('authToken');
-                    this.context.setLoginData(null, null);
-                    localStorage.clear();
-        
-                    // Redirect to the login page
-                    this.props.history.push("/login");
-                } else {
-                    console.error('Logout failed:', data.message);
-                }
-            });
-        }
+    
+    handleLogout = () => {
+        // Make a request to the Django backend to logout
+        authenticatedFetch("/api/logout", { 
+            method: "POST",
+            headers: {
+                'Authorization': `Token ${this.context.token}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Delete the token from local storage (assuming you saved it there upon login)
+                // localStorage.removeItem('authToken');
+                this.context.setLoginData(null, null);
+                localStorage.clear();
+    
+                // Redirect to the login page
+                this.props.history.push("/login");
+            } else {
+                console.error('Logout failed:', data.message);
+            }
+        });
+    }
+
     
     handleBodyPartClick = (part) => {
             this.setState({ 
@@ -143,7 +162,6 @@ export default class ChatBotPage extends Component {
             });
         }
     }
-
     componentDidMount()  {
         
         console.log(this.state.nmessages)
@@ -156,8 +174,21 @@ export default class ChatBotPage extends Component {
             this.props.history.push("/login");
             return;
         }
+        // this.state.nmessages = this.getUserMessageCount();
+        const { messages, inputMessage } = this.state;
+        const storedMessages = this.getMessagesFromLocalStorage();
+        if(storedMessages.length === 0) {
+            const newMessage = {text: `LLMbq. Welcome to the Medical Assistant ${username}!. Please select the body part you have complaints about`, sender: 'bot', time: this.getCurrentDateTime()}
+            const newMessages = [...messages, newMessage];
+            this.setState(({
+                messages: newMessages,
+                inputMessage: ""
+            }));
+        } else {
+            this.setState({ messages: storedMessages });
+        }
+       
         
-        this.state.nmessages = this.getUserMessageCount();
         
         if (username) {
             // this.fetchUserInteractions(username);
@@ -214,7 +245,7 @@ export default class ChatBotPage extends Component {
                     <List>
                         {messages.map((message, index) => (
                             <ListItem className={`message ${message.sender}`} key={index}>
-                                <ListItemText primary={message.text} secondary={message.sender === 'user' ? 'Patient' : 'LLMbq'} />
+                                <ListItemText primary={message.text} secondary={`${message.sender === 'user' ? 'Patient' : 'LLMbq'} - ${message.time}`} />
                             </ListItem>
                         ))}
                     </List>
