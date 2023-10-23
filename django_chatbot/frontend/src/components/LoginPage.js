@@ -60,8 +60,9 @@ export default class LoginPage extends Component {
         
         .then(data => {
             if (data.token) {
-                console.log("Successfully logged in!");
-                this.setLoginData(data.token, this.state.username);
+                console.log("Successfully logged 3 in!");
+                console.log(data.token)
+                this.context.setLoginData(data.token, this.state.username);
                 this.props.history.push("/chatbot");
             } else {
                 this.setState({
@@ -83,18 +84,10 @@ export default class LoginPage extends Component {
         });
         
     }
-    setLoginData = (token, username) => {
-        this.setState({ token, username });
-    };
 
     render() {
         return (
             <>
-            <TokenContext.Provider value={{ 
-            token: this.state.token, 
-            username: this.state.username, 
-            setLoginData: this.setLoginData 
-        }}>
             <Link to="/register" className="signupLink">New User? Sign Up</Link>
             <Grid container spacing={3} direction="column" alignItems="center" justify="center" style={{ minHeight: '100vh' }} className='rightAlignGrid'>
                 <Typography variant="h4" component="h1" gutterBottom>
@@ -112,7 +105,6 @@ export default class LoginPage extends Component {
                 </Button>
                 <Link to="/forgot-password" style={{ marginTop: '15px' }}>Forget Password?</Link>
             </Grid>
-            </TokenContext.Provider>
                 <Snackbar 
                 open={this.state.snackbar.open}
                 autoHideDuration={6000}
@@ -126,5 +118,6 @@ export default class LoginPage extends Component {
             </>
         );
     }
+    static contextType = TokenContext;
 }
 

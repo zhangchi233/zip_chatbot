@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'channels',
     'frontend.apps.FrontendConfig',
     'rest_framework',
-    'corsheaders',
+    # 'corsheaders',
     'rest_framework.authtoken',
 ]
 
@@ -55,7 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-     'corsheaders.middleware.CorsMiddleware',
+    #  'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'django_chatbot.urls'
@@ -107,7 +107,20 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-CORS_ALLOW_ALL_ORIGINS = True
+
+REST_FRAMEWORK = {
+   'DEFAULT_AUTHENTICATION_CLASSES': (
+       'rest_framework.authentication.TokenAuthentication',
+       'rest_framework.authentication.SessionAuthentication',
+   ),
+   'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAdminUser',
+        'rest_framework.permissions.IsAuthenticated',
+        # 'rest_framework.permissions.AllowAny',
+   ),
+}
+
+# CORS_ALLOW_ALL_ORIGINS = True
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/

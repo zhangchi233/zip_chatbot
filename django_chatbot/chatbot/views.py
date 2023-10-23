@@ -21,7 +21,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import logout
-
+from rest_framework.permissions import AllowAny
 
 
 
@@ -35,13 +35,74 @@ with open(PATH, "r") as f:
     openai_api_key = f.read().strip()
 openai.api_key = openai_api_key
 
+
 class ChatView(generics.ListAPIView):
     serializer_class = ChatSerializer
     queryset = Chat.objects.all()
+# @method_decorator(csrf_exempt, name='dispatch')
+# @api_view(['POST'])
+@permission_classes([IsAuthenticated])    
+class OpenaiView(APIView):
+    def post(self, request):
+        data = request.data
+        message = data.get('message')
+        
+        # Get the start time
+        starttime = data.get('starttime')
+        starttime = datetime.datetime.strptime(starttime, '%Y-%m-%d %H:%M:%S.%f')
+        
+        # Fetch previous chat records for the user and the given start time
+        chats = Chat.objects.filter(user=request.user, starttime__date=starttime.date(),
+                                    starttime__hour=starttime.hour, starttime__minute=starttime.minute,
+                                    starttime__second=starttime.second).order_by('created_at')
+        if not chats.exists():
+            body_part = data.get('body_part', 'unspecified body part')
+            message = "I have a pain in my " + body_part
+            response = ask_openai(message, "there is no previous message, but remember to ask question one by one")
+            # response = "Everyone has pain in life, we can share our pain together"
+            chat = Chat(user=request.user, message=message, starttime=starttime, created_at=timezone.now(), response=response)
+            chat.save()
+            return JsonResponse({'message': message, 'response': response, 'conversation': False})
+        # Prepare the previous dialogues for context
+        z = []
+        for chat in chats:
+            z.append(chat.message)
+            z.append(chat.response)
+        chat_messages = " \n ".join(z)
+
+        # Get a response from OpenAI
+        response = ask_openai(message, chat_messages)
+        # response = "hey this is you medical assistant. Welcome to LLMbq medical assistant. I am here to help you."
+        
+        # Save the message and response
+        chat = Chat(user=request.user, message=message, starttime=starttime,
+                    response=response, created_at=timezone.now())
+        chat.save()
+        
+        message_judge = ("do you think based on the dialogue history it is enough to obtain the"
+                        "health condition ?, if yes, please type: 'yes, chatgpt will continue',"
+                        " if no, please type: 'no, chatgpt will give summary'")
+        response_continue = ask_openai(message_judge, chat_messages)
+        # response_continue = "yes, chatgpt will continue"
+        if "yes, chatgpt will continue" in response_continue:
+            return JsonResponse({'message': message, 'response': response,'conversation':False})
+        else:
+            summary_message = ("given the conversation above, please give a summary of the patient's health condition in the "
+                            "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her ")
+            response = ask_openai(summary_message, chat_messages)
+            # response = "hey this is you medical assistant. Welcome to LLMbq medical assistant. I am here to help you."
+
+            # Save the summary response
+            chat = Chat(user=request.user, message=message, starttime=starttime,
+                        response=response, created_at=timezone.now())
+            chat.save()
+
+            return JsonResponse({'message': message, 'response': response, 'conversation': True})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
@@ -55,62 +116,6 @@ class LoginView(APIView):
 def get_csrf_token(request):
     token = get_token(request)
     return JsonResponse({'csrfToken': token})
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def openai_chat_endpoint(request):
-    data = request.data
-    message = data.get('message')
-    
-    # Get the start time
-    starttime = data.get('starttime')
-    starttime = datetime.datetime.strptime(starttime, '%Y-%m-%d %H:%M:%S.%f')
-    
-    # Fetch previous chat records for the user and the given start time
-    chats = Chat.objects.filter(user=request.user, starttime__date=starttime.date(),
-                                starttime__hour=starttime.hour, starttime__minute=starttime.minute,
-                                starttime__second=starttime.second).order_by('created_at')
-    if not chats.exists():
-        body_part = data.get('body_part', 'unspecified body part')
-        message = "I have a pain in my " + body_part
-        response = ask_openai(message, "there is no previous message, but remember to ask question one by one")
-        chat = Chat(user=request.user, message=message, starttime=starttime, created_at=timezone.now(), response=response)
-        chat.save()
-        return JsonResponse({'message': message, 'response': response, 'conversation': False})
-    # Prepare the previous dialogues for context
-    z = []
-    for chat in chats:
-        z.append(chat.message)
-        z.append(chat.response)
-    chat_messages = " \n ".join(z)
-
-    # Get a response from OpenAI
-    response = ask_openai(message, chat_messages)
-    # response = "hey this is you medical assistant. Welcome to LLMbq medical assistant. I am here to help you."
-    
-    # Save the message and response
-    chat = Chat(user=request.user, message=message, starttime=starttime,
-                response=response, created_at=timezone.now())
-    chat.save()
-    
-    message_judge = ("do you think based on the dialogue history it is enough to obtain the"
-                    "health condition ?, if yes, please type: 'yes, chatgpt will continue',"
-                    " if no, please type: 'no, chatgpt will give summary'")
-    response_continue = ask_openai(message_judge, chat_messages)
-    # response_continue = "yes, chatgpt will continue"
-    if "yes, chatgpt will continue" in response_continue:
-        return JsonResponse({'message': message, 'response': response,'conversation':False})
-    else:
-        summary_message = ("given the conversation above, please give a summary of the patient's health condition in the "
-                          "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her ")
-        response = ask_openai(summary_message, chat_messages)
-
-        # Save the summary response
-        chat = Chat(user=request.user, message=message, starttime=starttime,
-                    response=response, created_at=timezone.now())
-        chat.save()
-
-        return JsonResponse({'message': message, 'response': response, 'conversation': True})
 
 # Ask openai for response
 def ask_openai(message,chats):
@@ -133,6 +138,7 @@ def ask_openai(message,chats):
     return answer
 
 class RegisterView(APIView):
+    permission_classes = [AllowAny]
 
     @method_decorator(csrf_exempt, name='dispatch')
     def post(self, request):
@@ -149,7 +155,7 @@ class RegisterView(APIView):
             except:
                 return Response({'error_message': 'Error creating account'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'error_message': 'Passwords don\'t match'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error_message': 'Passwords donot match'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

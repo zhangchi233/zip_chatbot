@@ -21,7 +21,7 @@ import InteractiveBody from './InteractiveBody'
 
 const BASE_API_URL = 'http://127.0.0.1:8000/api/'
 export default class ChatBotPage extends Component {
-    
+    static contextType = TokenContext;
     constructor(props) {
         super(props);
         this.state = {
@@ -48,12 +48,13 @@ export default class ChatBotPage extends Component {
         }));
         if (inputMessage.trim()) {
             const currentDateTime = new Date().toISOString().replace('T', ' ').replace('Z', '');
+            console.log(currentDateTime)
 
             // Send the input message to the Django backend
             authenticatedFetch("/api/openai", {
                 method: "POST",
                 headers: {
-                    'Authorization': `Token ${this.context}`
+                    'Authorization': `Token ${this.context.token}`
                 },
                 body: JSON.stringify({ message: inputMessage, starttime: currentDateTime })
             })
@@ -87,10 +88,10 @@ export default class ChatBotPage extends Component {
     }
         handleLogout = () => {
             // Make a request to the Django backend to logout
-            authenticatedFetch("/api/logout", {
+            authenticatedFetch("/api/logout", { 
                 method: "POST",
                 headers: {
-                    'Authorization': `Token ${this.context}`
+                    'Authorization': `Token ${this.context.token}`
                 }
             })
             .then(response => response.json())
@@ -110,7 +111,7 @@ export default class ChatBotPage extends Component {
     handleBodyPartClick = (part) => {
             this.setState({ 
                 bodyPart: part, 
-                inputMessage: `I have pain in my ${part}`, 
+                inputMessage: `I have complaint in my ${part}`, 
                 bodyPartSelected: true 
             });
 
@@ -128,19 +129,20 @@ export default class ChatBotPage extends Component {
             });
         }
     }
-    static contextType = TokenContext;
+
     componentDidMount()  {
+        console.log(this.context.token, this.context.username)
         // Fetch the last 10 interactions for the user
         const username = this.context.username;
         if (username) {
-            this.fetchUserInteractions(username);
+            // this.fetchUserInteractions(username);
         }
     }
     fetchUserInteractions = (username) => {
         authenticatedFetch(`api/interactions?username=${username}&limit=10`, {
             method: "GET",
             headers: {
-                'Authorization': `Token ${this.context}`
+                'Authorization': `Token ${this.context.token}`
             }
         })
         .then(response => response.json())
@@ -158,8 +160,6 @@ export default class ChatBotPage extends Component {
 
         return (
             <>
-            
-
             <Grid container spacing={3} direction="column" alignItems="center" justify="center" style={{ minHeight: '100vh' }}>
                 
                 {/* Only Logout Link here */}
@@ -184,6 +184,7 @@ export default class ChatBotPage extends Component {
                         Clear Chat
                     </Button>
                 </div>
+            
                 <Paper className="chat-container" style={{ height: '75%', width: '90%', overflowY: 'auto', marginBottom: '20px' }}>
                     <List>
                         {messages.map((message, index) => (
