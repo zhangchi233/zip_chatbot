@@ -108,6 +108,7 @@ export default class ChatBotPage extends Component {
                     // Delete the token from local storage (assuming you saved it there upon login)
                     // localStorage.removeItem('authToken');
                     this.context.setLoginData(null, null);
+                    localStorage.clear();
         
                     // Redirect to the login page
                     this.props.history.push("/login");
@@ -144,16 +145,20 @@ export default class ChatBotPage extends Component {
     }
 
     componentDidMount()  {
-        console.log(this.context.token, this.context.username)
+        
         console.log(this.state.nmessages)
         // Fetch the last 10 interactions for the user
-        const username = this.context.username;
-        if (!this.context.token || !this.context.username) {
+        const token = localStorage.getItem('authToken');
+        const username = localStorage.getItem('authUsername'); 
+        console.log(token, username)
+        this.context.setLoginData(token, username);
+        if (!token || !username) {
             this.props.history.push("/login");
             return;
         }
         
         this.state.nmessages = this.getUserMessageCount();
+        
         if (username) {
             // this.fetchUserInteractions(username);
         }

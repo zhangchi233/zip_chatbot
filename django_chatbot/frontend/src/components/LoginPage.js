@@ -63,6 +63,8 @@ export default class LoginPage extends Component {
                 console.log("Successfully logged 3 in!");
                 console.log(data.token)
                 this.context.setLoginData(data.token, this.state.username);
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('authUsername', this.state.username);
                 this.props.history.push("/chatbot");
             } else {
                 this.setState({
