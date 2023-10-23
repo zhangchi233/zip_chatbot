@@ -1,0 +1,54 @@
+.container {
+    font-family: Arial, sans-serif;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 40px;
+    background-color: #f7f7f7;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+nav a {
+    margin-left: 20px;
+    text-decoration: none;
+    color: #333;
+}
+
+.mission-section {
+    display: flex;
+    justify-content: space-between;
+    padding: 40px;
+    /* background-image: url('/path-to-background-image.jpg'); Add your background image */
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+}
+
+.mission-content {
+    width: 50%;
+}
+
+.mission-image img {
+    max-width: 100%;
+}
+
+.view-more {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-top: 20px;
+    background-color: #333;
+    color: #fff;
+    text-decoration: none;
+}
+
+.footer {
+    padding: 40px;
+    background-color: #333;
+    color: #fff;
+}

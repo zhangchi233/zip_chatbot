@@ -55,9 +55,10 @@ class OpenaiView(APIView):
         chats = Chat.objects.filter(user=request.user, starttime__date=starttime.date(),
                                     starttime__hour=starttime.hour, starttime__minute=starttime.minute,
                                     starttime__second=starttime.second).order_by('created_at')
+        print(chats.exists())
         if not chats.exists():
-            body_part = data.get('body_part', 'unspecified body part')
-            message = "I have a pain in my " + body_part
+            # body_part = data.get('body_part', 'unspecified body part')
+            # message = body_part
             response = ask_openai(message, "there is no previous message, but remember to ask question one by one")
             # response = "Everyone has pain in life, we can share our pain together"
             chat = Chat(user=request.user, message=message, starttime=starttime, created_at=timezone.now(), response=response)
@@ -73,31 +74,56 @@ class OpenaiView(APIView):
         # Get a response from OpenAI
         response = ask_openai(message, chat_messages)
         # response = "hey this is you medical assistant. Welcome to LLMbq medical assistant. I am here to help you."
-        
+        response_continue = response.split("\n")[0]
+        response = "\n".join(response.split("\n")[1:]).strip()
         # Save the message and response
         chat = Chat(user=request.user, message=message, starttime=starttime,
                     response=response, created_at=timezone.now())
         chat.save()
-        
-        message_judge = ("do you think based on the dialogue history it is enough to obtain the"
-                        "health condition ?, if yes, please type: 'yes, chatgpt will continue',"
-                        " if no, please type: 'no, chatgpt will give summary'")
-        response_continue = ask_openai(message_judge, chat_messages)
+        response_continue = response_continue.lower()
         # response_continue = "yes, chatgpt will continue"
         if "yes, chatgpt will continue" in response_continue:
             return JsonResponse({'message': message, 'response': response,'conversation':False})
         else:
-            summary_message = ("given the conversation above, please give a summary of the patient's health condition in the "
-                            "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her ")
-            response = ask_openai(summary_message, chat_messages)
-            # response = "hey this is you medical assistant. Welcome to LLMbq medical assistant. I am here to help you."
+            if "no, chatgpt will give summary" in response_continue:
+                summary_message = "given the conversation above, please give a summary of the patient's health condition in the " \
+                                  "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her " \
+                                  "based on chat history, you can print summary in multi linguistic way, but please make sure the english version " \
+                                  "appeared"
+                response = ask_openai(summary_message, chat_messages)
+                # response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
+                chat = Chat(user=request.user, message=summary_message, starttime=starttime,
+                            response=response, created_at=timezone.now())
+                chat.save()
+                response = response
+                return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response, 'conversation': True})
 
-            # Save the summary response
-            chat = Chat(user=request.user, message=message, starttime=starttime,
-                        response=response, created_at=timezone.now())
-            chat.save()
 
-            return JsonResponse({'message': message, 'response': response, 'conversation': True})
+            else:
+                message_judge = " do you think based on the dialogue history it is enough to obtaine the health condition for cardiologist ?, " \
+                                " don't be too long nor too short to end questioning," \
+                                " and remeber you need to ask question from specific to general " \
+                                " if you think the information is not enough,please type: 'yes, chatgpt will continue' " \
+                                " if you think the information is enough please type: 'no, chatgpt will give summary' please be cautious as possible"
+                response_continue = ask_openai(message_judge, chat_messages+"\n"+response_continue+"\n"+response)
+                if "yes, chatgpt will continue" in response_continue:
+                    response = ask_openai("repeat your question, doctor?", chat_messages + "\n" + response_continue + "\n" + response)
+                    return JsonResponse({'message': message, 'response': response,'conversation':False})
+
+
+
+                summary_message = "given the conversation above, please give a summary of the patient's health condition in the " \
+                                  "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her " \
+                                  "based on chat history, you can print summary in multi linguistic way, but please make sure the english version " \
+                                  "appeared"
+                response = ask_openai(summary_message, chat_messages)
+                #response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
+                chat = Chat(user=request.user, message=summary_message, starttime=starttime,
+                            response=response, created_at=timezone.now())
+                chat.save()
+
+                response = response
+                return JsonResponse({'starttime':str(starttime),'message': message, 'response': response, 'conversation': True})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -119,20 +145,36 @@ def get_csrf_token(request):
 
 # Ask openai for response
 def ask_openai(message,chats):
-    response = openai.ChatCompletion.create(
-        model = "gpt-3.5-turbo",
-        messages=[
+    messages = [
             {"role": "system", "content": "You are an helpful professional and neutral cardiologist, and your job is"
                                           "to ask question to patient about their body condition to get the summary"
-                                          " of their health condition to help human cardiologis for better diagonsis."
+                                          " of their health condition to help human cardiologis for better diagonsis using Socrates Model."
                                           "you need to ask question according to the body part the patient selected first"
                                           "then, go to ask question in general, and once you ask enough question, you can"
                                           "you can give a summary of the patient's health condition. Remember, you are a real doctoc"
-                                          "so, ask in human way, and be kind to patient and be professional. ask question one by one"},
-            {"role": "assistant","content":"previous dialogues are: "+chats},
-            {"role": "user", "content": message},
-        ]
+                                          "so, ask in human way, and be kind to patient and be professional. and you can ask"
+                                          "remember that you need to ask one question each time and be careful to choose language you use"
+                                          "and you have to end the dialogue with summary "
+                                          },
+            {"role":"assistant","content":"you give indication whether the dailogue will continue or not in the beginning in such way of any true response:"
+                                          "if you think the dialogue will continue, add an indication: 'yes, chatgpt will continue \n' in the beginning"
+                                           "if you think the dialogue don't need to be continued, add an indication: 'no, chatgpt will give summary \n' in the beginning"
+                                           "no matter what content you type, what language you use, you need to add the indication in english in the beginning"
+                                           "for example: 'yes, chatgpt will continue \n 请问你的眩晕持续多久了呢' or 'no, chatgpt will give summary \n 好的我了解你的情况了'"
+                                           "please be cautious as possible, and remember to ask question one by one and collect enough information to give summary of "
+                                           "the patient's health condition for cardiologist"},
+            {"role": "assistant","content":"here is previous conversation history:"+chats},
+            {"role":"user","content":message},
+            ]
+
+
+    #messages.append({"role":"user","content":message})
+    #print("messages are",messages)
+    response = openai.ChatCompletion.create(
+        model = "gpt-4",
+        messages=messages
     )
+
     
     answer = response.choices[0].message.content.strip()
     return answer
