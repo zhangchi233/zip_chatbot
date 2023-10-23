@@ -83,6 +83,10 @@ export default class LoginPage extends Component {
             });
         });
         
+        
+    }
+    componentDidMount() {
+        console.log(this.context.token, this.context.username);
     }
 
     render() {

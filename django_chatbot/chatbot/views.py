@@ -46,6 +46,8 @@ class OpenaiView(APIView):
     def post(self, request):
         data = request.data
         message = data.get('message')
+        nmessages = data.get('nmessages')
+        print("nmessages is",nmessages)
         
         # Get the start time
         starttime = data.get('starttime')
@@ -56,15 +58,18 @@ class OpenaiView(APIView):
                                     starttime__hour=starttime.hour, starttime__minute=starttime.minute,
                                     starttime__second=starttime.second).order_by('created_at')
         print(chats.exists())
-        if not chats.exists():
+        if nmessages == 1:
+            print("here")
+            jsonresponse = self.chatbot_view(request.user, data, request)
             # body_part = data.get('body_part', 'unspecified body part')
-            # message = body_part
-            response = ask_openai(message, "there is no previous message, but remember to ask question one by one")
-            # response = "Everyone has pain in life, we can share our pain together"
-            chat = Chat(user=request.user, message=message, starttime=starttime, created_at=timezone.now(), response=response)
-            chat.save()
-            return JsonResponse({'message': message, 'response': response, 'conversation': False})
+            # # message = body_part
+            # response = ask_openai(message, "there is no previous message, but remember to ask question one by one")
+            # # response = "Everyone has pain in life, we can share our pain together"
+            # chat = Chat(user=request.user, message=message, starttime=starttime, created_at=timezone.now(), response=response)
+            # chat.save()
+            return jsonresponse
         # Prepare the previous dialogues for context
+        print("here 2")
         z = []
         for chat in chats:
             z.append(chat.message)
@@ -124,6 +129,34 @@ class OpenaiView(APIView):
 
                 response = response
                 return JsonResponse({'starttime':str(starttime),'message': message, 'response': response, 'conversation': True})
+    def chatbot_view(self, username, data, request):
+        # redirect to chatbot page
+        context = {}
+
+        context['message'] = data.get('message')
+        starttime = data.get('starttime')
+        context['starttime'] = data.get('starttime')
+        first_message = data.get('message')
+        #write to database
+
+        first_history = "no previous history, this is the first message"
+        response = ask_openai(first_message, first_history)
+        #response = "wait for test"
+        response = response.split("\n")[1:]
+        response = "\n".join(response)
+        chat = Chat(user=request.user, message=first_message, starttime=starttime,created_at=timezone.now(),response=response)
+        chat.save()
+        chats = []
+        chats.append(first_message)
+
+        chats.append(response)
+        context['chats'] = Chat.objects.filter(user=request.user,starttime=starttime)
+        # response context
+        # create a http response
+        # redirect to chatbot page
+        #return redirect("chatbot")
+        print("context is :", chats)
+        return JsonResponse({'message': context['message'], 'response': response, 'conversation': False})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -201,65 +234,12 @@ class RegisterView(APIView):
 
 
 
-def register(request):
-    if request.method == 'GET':
-        print("get")
-        print(request.GET.get('context'))
-        return render(request, 'register.html')
-    if request.method == 'POST':
-        username = request.POST['username']
-        email = request.POST['email']
-        password1 = request.POST['password1']
-        password2 = request.POST['password2']
-
-        if password1 == password2:
-            try:
-                user = User.objects.create_user(username, email, password1)
-                user.save()
-                auth.login(request, user)
-
-
-
-                return redirect('chatbot')
-            except:
-                error_message = 'Error creating account'
-                return render(request, 'register.html', {'error_message': error_message})
-        else:
-            error_message = 'Password dont match'
-            return render(request, 'register.html', {'error_message': error_message})
-    return render(request, 'register.html')
 
 def api_logout(request):
     logout(request)
     return JsonResponse({'status': 'success', 'message': 'Logged out successfully'})
 
 
-
-def chatbot_view(request,username):
-    # redirect to chatbot page
-    context = {}
-
-    context['body_part'] = request.GET.get('body_part')
-    starttime = datetime.datetime.now()
-    context['starttime'] = str(datetime.datetime.now())
-    first_message = "I have a pain in my " + context['body_part']
-    #write to database
-    print("first message is",first_message)
-    response = ask_openai(first_message, "there is no previous message,"
-                                         "but remember to ask question one by one")
-    #response = "wait for test"
-    print(response)
-    chat = Chat(user=request.user, message=first_message, starttime=starttime,created_at=timezone.now(),response=response)
-    chat.save()
-    chats = []
-    chats.append(first_message)
-    chats.append(response)
-    context['chats'] = Chat.objects.filter(user=request.user,starttime=starttime)
-    # response context
-    # create a http response
-    # redirect to chatbot page
-    #return redirect("chatbot")
-    return render(request,'chatbot.html',context)
 
 class LastTenChatsView(generics.ListAPIView):
     serializer_class = ChatSerializer

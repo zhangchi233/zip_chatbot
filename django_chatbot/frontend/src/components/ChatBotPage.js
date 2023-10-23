@@ -30,7 +30,7 @@ export default class ChatBotPage extends Component {
             showModal: true,
             bodyPart: "",
             bodyPartSelected: false,
-            
+            nmessages: 0,
         };
     }
 
@@ -42,12 +42,20 @@ export default class ChatBotPage extends Component {
 
     handleSend = () => {
         const { messages, inputMessage } = this.state;
-        this.setState(prevState => ({
-            messages: [...prevState.messages, {text: inputMessage, sender: 'user'}],
+        const newMessages = [...messages, {text: inputMessage, sender: 'user'}];
+        this.setState(({
+            messages: newMessages,
             inputMessage: ""
         }));
+        const userMessageCount = newMessages.filter(message => message.sender === 'user').length;
+        this.setState({ nmessages: userMessageCount });
+        console.log(userMessageCount);
+        console.log("hello")
+
         if (inputMessage.trim()) {
-            const currentDateTime = new Date().toISOString().replace('T', ' ').replace('Z', '');
+            var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
+            console.log(tzoffset)
+            const currentDateTime = (new Date(Date.now() - tzoffset)).toISOString().replace('T', ' ').replace('Z', '');
             console.log(currentDateTime)
 
             // Send the input message to the Django backend
@@ -56,7 +64,7 @@ export default class ChatBotPage extends Component {
                 headers: {
                     'Authorization': `Token ${this.context.token}`
                 },
-                body: JSON.stringify({ message: inputMessage, starttime: currentDateTime })
+                body: JSON.stringify({ message: inputMessage, starttime: currentDateTime, nmessages: userMessageCount })
             })
             .then(response => response.json())
             .then(data => {
@@ -98,7 +106,8 @@ export default class ChatBotPage extends Component {
             .then(data => {
                 if (data.status === 'success') {
                     // Delete the token from local storage (assuming you saved it there upon login)
-                    this.setState({ token: null });
+                    // localStorage.removeItem('authToken');
+                    this.context.setLoginData(null, null);
         
                     // Redirect to the login page
                     this.props.history.push("/login");
@@ -119,6 +128,10 @@ export default class ChatBotPage extends Component {
     handleClearSelection = () => {
         this.setState({ bodyPartSelected: false, bodyPart: "", inputMessage: "" });
     }
+
+    getUserMessageCount = (messagesArray = this.state.messages) => {
+        return messagesArray.filter(message => message.sender === 'user').length;
+    }
     
     componentDidUpdate(prevProps, prevState) {
         // Check if the modal was closed and a body part was previously selected
@@ -132,8 +145,15 @@ export default class ChatBotPage extends Component {
 
     componentDidMount()  {
         console.log(this.context.token, this.context.username)
+        console.log(this.state.nmessages)
         // Fetch the last 10 interactions for the user
         const username = this.context.username;
+        if (!this.context.token || !this.context.username) {
+            this.props.history.push("/login");
+            return;
+        }
+        
+        this.state.nmessages = this.getUserMessageCount();
         if (username) {
             // this.fetchUserInteractions(username);
         }

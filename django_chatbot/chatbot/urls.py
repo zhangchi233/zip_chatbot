@@ -20,7 +20,7 @@ urlpatterns = [
     path('logout', views.logout, name='logout'),
     path('download_report', PDFReportView.as_view(), name='download_report'),
     path('upload', views.upload_image,name = "upload"), 
-    path('user/<str:username>/selection/', views.chatbot_view, name='chatbot_view'),
+    # path('user/<str:username>/selection/', views.chatbot_view, name='chatbot_view'),
     path('get-csrf-token', views.get_csrf_token, name='get_csrf_token'),
     path('openai', OpenaiView.as_view(), name='openai_chat_endpoint'),
 
