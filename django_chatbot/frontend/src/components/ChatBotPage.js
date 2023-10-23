@@ -46,6 +46,11 @@ export default class ChatBotPage extends Component {
         console.log(currentDateTime)
         return currentDateTime;
     }
+    formatDateTime = (datetime) => {
+        const date = new Date(datetime);
+        const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        return formattedDate;
+    }
     saveMessagesLocally = (messages) => {
         // Save the messages to local storage
         localStorage.setItem('messages', JSON.stringify(messages));
@@ -245,7 +250,7 @@ export default class ChatBotPage extends Component {
                     <List>
                         {messages.map((message, index) => (
                             <ListItem className={`message ${message.sender}`} key={index}>
-                                <ListItemText primary={message.text} secondary={`${message.sender === 'user' ? 'Patient' : 'LLMbq'} - ${message.time}`} />
+                                <ListItemText primary={message.text} secondary={`${message.sender === 'user' ? 'Patient' : 'LLMbq'} - ${this.formatDateTime(message.time)}`} />
                             </ListItem>
                         ))}
                     </List>
