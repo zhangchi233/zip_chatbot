@@ -45,9 +45,9 @@ export default class ChatBotPage extends Component {
     }
     getCurrentDateTime = () => {
         var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
-        console.log(tzoffset)
+        // console.log(tzoffset)
         const currentDateTime = (new Date(Date.now() - tzoffset)).toISOString().replace('T', ' ').replace('Z', '');
-        console.log(currentDateTime)
+        // console.log(currentDateTime)
         return currentDateTime;
     }
     formatDateTime = (datetime) => {
@@ -67,11 +67,13 @@ export default class ChatBotPage extends Component {
         const currentDateTime = this.getCurrentDateTime();
         const { starttime, messages, nmessages, inputMessage } = this.state;
         let chatstarttime = starttime;
-        if(nmessages === 0) {
-            chatstarttime = this.getCurrentDateTime();
-        }
         const newMessages = [...messages, {text: inputMessage, sender: 'user', time: currentDateTime}];
         const userMessageCount = newMessages.filter(message => message.sender === 'user').length;
+        if(userMessageCount === 1) {
+            chatstarttime = this.getCurrentDateTime();
+            localStorage.setItem('starttime', chatstarttime);
+            console.log("setting new starttime", chatstarttime)
+        }
         this.setState({
             messages: newMessages,
             inputMessage: "",
@@ -81,9 +83,9 @@ export default class ChatBotPage extends Component {
             this.saveMessagesLocally(this.state.messages);
         });
         // Count the number of messages sent by the user
-        console.log(starttime, chatstarttime);
-        console.log(userMessageCount);
-        console.log("hello")
+        // console.log(starttime, chatstarttime);
+        console.log("message count", userMessageCount);
+        // console.log("hello")
 
         if (inputMessage.trim()) {
             
@@ -105,7 +107,7 @@ export default class ChatBotPage extends Component {
                 }), () => {
                     this.saveMessagesLocally(this.state.messages);  // Save the messages to local storage
                 });
-                console.log(data.conversation)
+                console.log("finish conversation:", data.conversation)
             });
         }
     }
@@ -121,7 +123,15 @@ export default class ChatBotPage extends Component {
     }
 
     handleClearChat = () => {
-        this.setState({ messages: [], nmessages: 0, starttime: null }); // Clear the messages array
+        localStorage.removeItem('starttime');
+        localStorage.removeItem('messages');
+        const newMessage = {text: `LLMbq. Welcome to the Medical Assistant ${this.context.username}!. Please select the body part you have complaints about`, sender: 'bot', time: this.getCurrentDateTime()}
+        const newMessages = [newMessage];
+        this.setState(({
+            messages: newMessages,
+            nmessages: 0,
+            starttime: null,
+        }));
     }
     handleKeyDown = (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -182,48 +192,36 @@ export default class ChatBotPage extends Component {
     }
     componentDidMount()  {
         
-        console.log(this.state.nmessages)
-        // Fetch the last 10 interactions for the user
+        // console.log(this.state.nmessages)
+        // to remain logged in when refreshing
         const token = localStorage.getItem('authToken');
         const username = localStorage.getItem('authUsername'); 
-        console.log(token, username)
+        console.log("Token, username", token, username)
         this.context.setLoginData(token, username);
         if (!token || !username) {
             this.props.history.push("/login");
             return;
         }
-        // this.state.nmessages = this.getUserMessageCount();
-        const { messages, inputMessage } = this.state;
+        // to load messages when refreshing
+        const { messages, inputMessage, starttime } = this.state;
         const storedMessages = this.getMessagesFromLocalStorage();
+        // to load starttime when refreshing
+        const chatstarttime = localStorage.getItem('starttime');
+        console.log("retrieving starttime", chatstarttime)
         if(storedMessages.length === 0) {
             const newMessage = {text: `LLMbq. Welcome to the Medical Assistant ${username}!. Please select the body part you have complaints about`, sender: 'bot', time: this.getCurrentDateTime()}
             const newMessages = [...messages, newMessage];
             this.setState(({
                 messages: newMessages,
-                inputMessage: ""
             }));
         } else {
-            this.setState({ messages: storedMessages });
+            this.setState({ 
+                messages: storedMessages,
+                starttime: chatstarttime,
+             });
         }
-        
-        
+
     }
-    // fetchUserInteractions = (username) => {
-    //     authenticatedFetch(`api/interactions?username=${username}&limit=10`, {
-    //         method: "GET",
-    //         headers: {
-    //             'Authorization': `Token ${this.context.token}`
-    //         }
-    //     })
-    //     .then(response => response.json())
-    //     .then(data => {
-    //         // Assuming the API returns the interactions as a list (adjust according to your backend response)
-    //         this.setState({ messages: data });
-    //     })
-    //     .catch(error => {
-    //         console.error("Error fetching user interactions:", error);
-    //     });
-    // };
     
     render() {
         const { messages, inputMessage } = this.state;

@@ -58,7 +58,7 @@ class OpenaiView(APIView):
                                     starttime__hour=starttime.hour, starttime__minute=starttime.minute,
                                     starttime__second=starttime.second).order_by('created_at')
         print(chats.exists())
-        if chat.exists():
+        if not chats.exists():
             print("here")
             jsonresponse = self.chatbot_view(request.user, data, request)
             # body_part = data.get('body_part', 'unspecified body part')
