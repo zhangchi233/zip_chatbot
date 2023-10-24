@@ -6,7 +6,7 @@ import openai
 from .forms import ReportForm
 from django.contrib import auth
 from django.contrib.auth.models import User
-from .models import Chat
+from .models import Chat, Report, Summary
 import datetime
 from rest_framework import generics, status
 from .serializer import ChatSerializer
@@ -47,7 +47,7 @@ class OpenaiView(APIView):
         data = request.data
         message = data.get('message')
         nmessages = data.get('nmessages')
-        print("nmessages is",nmessages)
+
         
         # Get the start time
         starttime = data.get('starttime')
@@ -57,9 +57,9 @@ class OpenaiView(APIView):
         chats = Chat.objects.filter(user=request.user, starttime__date=starttime.date(),
                                     starttime__hour=starttime.hour, starttime__minute=starttime.minute,
                                     starttime__second=starttime.second).order_by('created_at')
-        print(chats.exists())
-        if chat.exists():
-            print("here")
+
+        if not chats.exists():
+
             jsonresponse = self.chatbot_view(request.user, data, request)
             # body_part = data.get('body_part', 'unspecified body part')
             # # message = body_part
@@ -69,7 +69,7 @@ class OpenaiView(APIView):
             # chat.save()
             return jsonresponse
         # Prepare the previous dialogues for context
-        print("here 2")
+
         z = []
         for chat in chats:
             z.append(chat.message)
@@ -102,6 +102,8 @@ class OpenaiView(APIView):
                             response=response, created_at=timezone.now())
                 chat.save()
                 response = response
+                summary = Summary(user=request.user, summary=response, created_at=starttime)
+                summary.save()
                 return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response, 'conversation': True})
 
 
@@ -113,8 +115,14 @@ class OpenaiView(APIView):
                                 " if you think the information is enough please type: 'no, chatgpt will give summary' please be cautious as possible"
                 response_continue = ask_openai(message_judge, chat_messages+"\n"+response_continue+"\n"+response)
                 if "yes, chatgpt will continue" in response_continue:
+                    print("repeat")
                     response = ask_openai("repeat your question, doctor?", chat_messages + "\n" + response_continue + "\n" + response)
                     # added Timezone.now() to the context
+                    response = "\n".join(response.split("continue")[1:]).strip()
+                    chat = Chat(user=request.user, message="repeat your question, doctor?", starttime=starttime,
+                                response=response, created_at=timezone.now())
+                    chat.save()
+
                     return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response,'conversation':False})
 
 
@@ -251,15 +259,18 @@ class LastTenChatsView(generics.ListAPIView):
         user = self.request.user
         return Chat.objects.filter(user=user).order_by('-created_at')[:10]
 
-
+@permission_classes([IsAuthenticated])
 def upload_image(request):
 
     if request.method =="POST":
+
+
         image = request.FILES.get('images')
-        user = request.user
+
         report = request.POST.get('report')
+        user = request.user.username
         file = Report(user=user,report=report,images=image)
         file.save()
 
-        return redirect("login")  # Redirect to a page showing all reports
+        return redirect('loginapi')  # Redirect to a page showing all reports
     return render(request,'add_user_image.html')

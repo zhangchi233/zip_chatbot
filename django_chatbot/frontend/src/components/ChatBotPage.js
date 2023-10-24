@@ -57,6 +57,7 @@ export default class ChatBotPage extends Component {
     }
     saveMessagesLocally = (messages) => {
         // Save the messages to local storage
+
         localStorage.setItem('messages', JSON.stringify(messages));
     }
     getMessagesFromLocalStorage = () => {
@@ -117,9 +118,26 @@ export default class ChatBotPage extends Component {
     }
     handleDownloadReport = () => {
         const username = encodeURIComponent(this.context.username);  // Ensure the username is URL encoded to handle any special characters
-        window.open(`/api/download_report?username=${username}`, '_blank');
-    }
+        const starttime = this.state.starttime;
 
+        if (this.conversation === true) {
+            window.open(`../download_report?username=${username}&starttime=${starttime}`, '_blank');}
+        else{
+            // please complete the conversation
+            alert("Please complete the conversation and give more details about your helath condition");}
+    }
+    handleUploadReport = () => {
+        // redirect to upload report page
+        if (this.conversation === true) {
+            var url = `/upload?username=${username}&starttime=${starttime}`;
+            // redirect to upload report page
+            window.location.href = url;
+        }
+        else{
+            // please complete the conversation
+            alert("Please complete the conversation and give more details about your helath condition");}
+
+    }
     handleClearChat = () => {
         this.setState({ messages: [], nmessages: 0, starttime: null }); // Clear the messages array
     }
@@ -249,6 +267,9 @@ export default class ChatBotPage extends Component {
                     </Link>
                     <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleDownloadReport} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Download Report
+                    </Link>
+                    <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleUploadReport} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                        Upload Report
                     </Link>
 
                     <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleClearChat} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>

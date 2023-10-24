@@ -15,9 +15,16 @@ class Chat(models.Model):
 class Report(models.Model):
     # the foreign key is the username
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    #user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.TextField()
     report = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     images = models.ImageField(upload_to='media', max_length=100, blank=True, null=True, verbose_name='user_images')
     def __str__(self):
         return f'{self.user.username}: {self.report}'
+class Summary(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    summary = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f'{self.user.username}: {self.summary}'
