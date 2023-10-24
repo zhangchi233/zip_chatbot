@@ -47,6 +47,6 @@ class PDFReportView(View):
         buffer.seek(0)
         response = FileResponse(buffer,
                                 as_attachment=True,
-                                filename=time+f'_{user_id}.pdf')
+                                filename=f'_{user_id}.pdf')
         response['Content-Disposition'] = 'inline; filename="output.pdf"'
         return response
