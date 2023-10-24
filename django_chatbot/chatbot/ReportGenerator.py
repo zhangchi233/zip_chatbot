@@ -6,11 +6,11 @@ from django.http import HttpResponse
 import os
 import datetime
 class PDFReportView(View):
-    def get(self, request,username):
+    def post(self, request):
 
         summary = request.GET.get('summary')
         print("summary is ",summary)
-        user_id = request.GET.get('userId')
+        user_id = request.GET.get('username')
         time = str(datetime.datetime.now())
         # Create a PDF document using ReportLab
         from io import BytesIO

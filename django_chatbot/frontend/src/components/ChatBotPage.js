@@ -16,6 +16,9 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Link from '@material-ui/core/Link';
 import TokenContext from './TokenContext';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
+import NavDropdown from 'react-bootstrap/NavDropdown';
 
 import InteractiveBody from './InteractiveBody'
 
@@ -30,10 +33,11 @@ export default class ChatBotPage extends Component {
             showModal: true,
             bodyPart: "",
             bodyPartSelected: false,
-            nmessages: 0,
+            nmessages: 0, // Number of messages sent by the user
+            finishConversation: false,
+            starttime: null,
         };
     }
-
     handleInputChange = (event) => {
         this.setState({
             inputMessage: event.target.value
@@ -61,17 +65,23 @@ export default class ChatBotPage extends Component {
     }
     handleSend = () => {
         const currentDateTime = this.getCurrentDateTime();
-        const { messages, inputMessage } = this.state;
+        const { starttime, messages, nmessages, inputMessage } = this.state;
+        let chatstarttime = starttime;
+        if(nmessages === 0) {
+            chatstarttime = this.getCurrentDateTime();
+        }
         const newMessages = [...messages, {text: inputMessage, sender: 'user', time: currentDateTime}];
+        const userMessageCount = newMessages.filter(message => message.sender === 'user').length;
         this.setState({
             messages: newMessages,
-            inputMessage: ""
+            inputMessage: "",
+            starttime: chatstarttime,
+            nmessages: userMessageCount
         }, () => { // Using callback form of setState to ensure we have the latest state
             this.saveMessagesLocally(this.state.messages);
         });
         // Count the number of messages sent by the user
-        const userMessageCount = newMessages.filter(message => message.sender === 'user').length; 
-        this.setState({ nmessages: userMessageCount });
+        console.log(starttime, chatstarttime);
         console.log(userMessageCount);
         console.log("hello")
 
@@ -84,16 +94,18 @@ export default class ChatBotPage extends Component {
                 headers: {
                     'Authorization': `Token ${this.context.token}`
                 },
-                body: JSON.stringify({ message: inputMessage, starttime: currentDateTime, nmessages: userMessageCount })
+                body: JSON.stringify({ message: inputMessage, starttime: chatstarttime, nmessages: userMessageCount })
             })
             .then(response => response.json())
             .then(data => {
                 const botTime = this.getCurrentDateTime();
                 this.setState(prevState => ({
-                    messages: [...prevState.messages, { text: data.response, sender: 'bot', time: data.starttime }],
+                    messages: [...prevState.messages, { text: data.response, sender: 'bot', time: botTime }],
+                    finishConversation: data.conversation
                 }), () => {
                     this.saveMessagesLocally(this.state.messages);  // Save the messages to local storage
                 });
+                console.log(data.conversation)
             });
         }
     }
@@ -104,11 +116,12 @@ export default class ChatBotPage extends Component {
         this.setState({ showModal: false });
     }
     handleDownloadReport = () => {
-        window.open('/api/download_report', '_blank');  // Opens a new window or tab to download the report
+        const username = encodeURIComponent(this.context.username);  // Ensure the username is URL encoded to handle any special characters
+        window.open(`/api/download_report?username=${username}`, '_blank');
     }
 
     handleClearChat = () => {
-        this.setState({ messages: [] });
+        this.setState({ messages: [], nmessages: 0, starttime: null }); // Clear the messages array
     }
     handleKeyDown = (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -192,29 +205,25 @@ export default class ChatBotPage extends Component {
         } else {
             this.setState({ messages: storedMessages });
         }
-       
         
         
-        if (username) {
-            // this.fetchUserInteractions(username);
-        }
     }
-    fetchUserInteractions = (username) => {
-        authenticatedFetch(`api/interactions?username=${username}&limit=10`, {
-            method: "GET",
-            headers: {
-                'Authorization': `Token ${this.context.token}`
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Assuming the API returns the interactions as a list (adjust according to your backend response)
-            this.setState({ messages: data });
-        })
-        .catch(error => {
-            console.error("Error fetching user interactions:", error);
-        });
-    };
+    // fetchUserInteractions = (username) => {
+    //     authenticatedFetch(`api/interactions?username=${username}&limit=10`, {
+    //         method: "GET",
+    //         headers: {
+    //             'Authorization': `Token ${this.context.token}`
+    //         }
+    //     })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         // Assuming the API returns the interactions as a list (adjust according to your backend response)
+    //         this.setState({ messages: data });
+    //     })
+    //     .catch(error => {
+    //         console.error("Error fetching user interactions:", error);
+    //     });
+    // };
     
     render() {
         const { messages, inputMessage } = this.state;
@@ -225,16 +234,7 @@ export default class ChatBotPage extends Component {
                 
                 {/* Only Logout Link here */}
                 <div style={{ width: '90%', display: 'flex', justifyContent: 'flex-end' }}>
-                    <Link href="#" onClick={this.handleLogout} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
-                        Logout
-                    </Link>
-                </div>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '50%' }}>
-                    <Typography variant="h4" component="h1" gutterBottom>
-                        
-                    </Typography>
-                    <Button className="body-button" variant="contained" color="primary" onClick={this.handleShowBody}>
+                    {/* <Button className="body-button" variant="contained" color="primary" onClick={this.handleShowBody}>
                         Show Anatomy
                     </Button>
                     <Button className="body-button" variant="contained" color="primary" onClick={this.handleDownloadReport}>
@@ -243,7 +243,28 @@ export default class ChatBotPage extends Component {
 
                     <Button className="body-button" variant="contained" color="primary" onClick={this.handleClearChat}>
                         Clear Chat
-                    </Button>
+                    </Button> */}
+                    <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleShowBody} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                        Show Anatomy
+                    </Link>
+                    <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleDownloadReport} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                        Download Report
+                    </Link>
+
+                    <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleClearChat} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                        Clear Chat
+                    </Link>
+                    <Link href="#" onClick={this.handleLogout} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                        Logout
+                    </Link>
+                    
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '50%' }}>
+                    <Typography variant="h4" component="h1" gutterBottom>
+                        
+                    </Typography>
+                    
                 </div>
             
                 <Paper className="chat-container" style={{ height: '75%', width: '90%', overflowY: 'auto', marginBottom: '20px' }}>

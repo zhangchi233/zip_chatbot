@@ -18,20 +18,20 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.middleware.csrf import get_token
 from django.http import JsonResponse
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import logout
 from rest_framework.permissions import AllowAny
-
+from django.utils import timezone
+from django.conf import settings
+from .models import Report
 
 
 # from django.http import HttpResponse
 
-from django.utils import timezone
-# import reverse
-from django.urls import reverse
-PATH = "C:/Users/ssaba/OneDrive - Delft University of Technology/JIP/zip_chatbot/django_chatbot/api_key.txt"
-with open(PATH, "r") as f:
+BASE_DIR = str(settings.BASE_DIR)
+open_ai_key_path = BASE_DIR+"/api_key.txt"
+with open(open_ai_key_path, "r") as f:
     openai_api_key = f.read().strip()
 openai.api_key = openai_api_key
 
@@ -58,7 +58,7 @@ class OpenaiView(APIView):
                                     starttime__hour=starttime.hour, starttime__minute=starttime.minute,
                                     starttime__second=starttime.second).order_by('created_at')
         print(chats.exists())
-        if nmessages == 1:
+        if chat.exists():
             print("here")
             jsonresponse = self.chatbot_view(request.user, data, request)
             # body_part = data.get('body_part', 'unspecified body part')
@@ -255,59 +255,11 @@ class LastTenChatsView(generics.ListAPIView):
 def upload_image(request):
 
     if request.method =="POST":
-        form = ReportForm(request.POST, request.FILES)
-        print(form.is_valid())
-        if form.is_valid():
+        image = request.FILES.get('images')
+        user = request.user
+        report = request.POST.get('report')
+        file = Report(user=user,report=report,images=image)
+        file.save()
 
-            report = form.save(commit=False)
-
-            #report.user ="maxzhang"  # Assuming user authentication is in place
-            report.save()
-            return render(request,'add_user_image.html')  # Redirect to a page showing all reports
+        return redirect("login")  # Redirect to a page showing all reports
     return render(request,'add_user_image.html')
-def chatbot(request,username):
-
-    starttime = request.GET.get('starttime')
-
-    starttime = datetime.datetime.strptime(starttime, '%Y-%m-%d %H:%M:%S.%f')
-
-    chats = Chat.objects.filter(user=request.user,starttime__date=starttime.date(),
-                                starttime__hour=starttime.hour,starttime__minute=starttime.minute,
-                                starttime__second=starttime.second)
-
-
-    if request.method == 'POST':
-
-        message = request.POST.get('message')
-        chats = chats.order_by('created_at')
-        z = []
-        for chat in chats:
-            z.append(chat.message)
-            z.append(chat.response)
-        chat_messages = " \n ".join(z)
-        response = ask_openai(message, chat_messages)
-
-        chat = Chat(user=request.user, message=message, starttime=starttime,
-                    response=response, created_at=timezone.now())
-        chat.save()
-
-        print("chat messages are",chat_messages)
-        message_judge = "do you think based on the dialogue history it is enough to obtaine the" \
-                        "health condition ?, if yes, please type: 'yes, chatgpt will continue'," \
-                        " if no, please type: 'no, chatgpt will give summary' "
-
-        response_continue = ask_openai(message_judge,chat_messages)
-        print("response continue is",response_continue)
-        if "yes, chatgpt will continue" in response_continue:
-            return JsonResponse({'message': message, 'response': response,'conversation':False})
-        if True:
-            summary_message = "given the conversation above, please give a summary of the patient's health condition in the " \
-                              "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her "
-            response = ask_openai(summary_message, chat_messages)
-            chat = Chat(user=request.user, message=message, starttime=starttime,
-                        response=response, created_at=timezone.now())
-            chat.save()
-            print("message is", message)
-            response = response
-            return JsonResponse({'message': message, 'response': response, 'conversation': True})
-    return render(request, 'chatbot.html', {'chats': chats})
