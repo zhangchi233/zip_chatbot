@@ -12,7 +12,7 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/lab/Alert';
 
 
-const BASE_API_URL = 'http://127.0.0.1:8000/api'
+
 
 export default class LoginPage extends Component {
     constructor(props) {
@@ -47,7 +47,7 @@ export default class LoginPage extends Component {
         };
     
         // Send a POST request to the Django server
-        authenticatedFetch('http://127.0.0.1:8000/api/login', {
+        authenticatedFetch('/api/login', {
             method: 'POST',
             body: JSON.stringify(formData),
         })
