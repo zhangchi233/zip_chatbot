@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import Button from "@material-ui/core/Button";
-import Grid from "@material-ui/core/Grid";
-import Typography from "@material-ui/core/Typography";
-import TextField from "@material-ui/core/TextField";
-import FormControl from "@material-ui/core/FormControl";
+import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import FormControl from "@mui/material/FormControl";
 import { Link } from "react-router-dom";
 import TokenContext from './TokenContext'; // Import the context
 import './RegisterPage.css';
@@ -76,29 +76,30 @@ export default class RegisterPage extends Component {
         return (
             <>
             <TokenContext.Provider value={this.state.token}>
-            <Link to="/login" className="loginlink">Already have an account? Log in</Link>
-            <Grid container spacing={6} direction="column" alignItems="center" justify="center" style={{ minHeight: '100vh' }} className='rightAlignGrid'>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    Welcome!
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                    Register as a new user
-                </Typography>
-                {this.state.errorMessage && (
-                <Typography variant="body2" style={{ color: 'red' }}>
-                    {this.state.errorMessage}
-                </Typography>
-                )}
-                <FormControl component="fieldset" style={{ width: '300px', marginBottom: '15px' }}>
-                    <TextField label="Username" type="username" name="username" value={this.state.username} onChange={this.handleInputChange} fullWidth />
-                    <TextField label="E-mail" type="email" name="email" value={this.state.email} onChange={this.handleInputChange} fullWidth style={{ marginTop: '10px' }} />
-                    <TextField label="password1" type="password" name="password1" value={this.state.password1} onChange={this.handleInputChange} fullWidth style={{ marginTop: '10px' }}/>
-                    <TextField label="Password2" type="password" name="password2" value={this.state.password2} onChange={this.handleInputChange} fullWidth style={{ marginTop: '10px' }} />
-                </FormControl>
-                <Button variant="contained" color="primary" onClick={this.handleSubmit} >
-                    Creat Account
-                </Button>
-            </Grid>
+            
+                <Grid container spacing={6} direction="column" alignItems="center" justifyContent="center" style={{ minHeight: '100vh' }} className='rightAlignGrid'>
+                    <Typography variant="h4" component="h1" gutterBottom>
+                        Welcome!
+                    </Typography>
+                    <Typography variant="body1" gutterBottom>
+                        Register as a new user
+                    </Typography>
+                    {this.state.errorMessage && (
+                        <Typography variant="body2" style={{ color: 'red' }}>
+                            {this.state.errorMessage}
+                        </Typography>
+                    )}
+                    <FormControl component="fieldset" style={{ width: '300px', marginBottom: '15px' }}>
+                        <TextField label="Username" type="username" name="username" value={this.state.username} onChange={this.handleInputChange} fullWidth />
+                        <TextField label="E-mail" type="email" name="email" value={this.state.email} onChange={this.handleInputChange} fullWidth style={{ marginTop: '10px' }} />
+                        <TextField label="password1" type="password" name="password1" value={this.state.password1} onChange={this.handleInputChange} fullWidth style={{ marginTop: '10px' }}/>
+                        <TextField label="Password2" type="password" name="password2" value={this.state.password2} onChange={this.handleInputChange} fullWidth style={{ marginTop: '10px' }} />
+                    </FormControl>
+                    <Button variant="contained" color="primary" onClick={this.handleSubmit} >
+                        Create Account
+                    </Button>
+                    <Link to="/login" className="loginlink">Already have an account? Log in</Link>
+                </Grid>
             </TokenContext.Provider>
             </>
         );

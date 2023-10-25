@@ -8,15 +8,17 @@ body {
     fill: transparent;
     stroke: none;
     transition: fill 0.3s;
-  }
-  
-  .front path:hover {
+}
+
+.front path:hover {
     fill: #FF0000;
     opacity: 0.3;
-  }
+}
+
 svg {
     z-index: 10;
 }
+
 .buttonContainer {
     display: flex;
     justify-content: center;
@@ -27,7 +29,7 @@ svg {
 .buttonContainer .MuiButton-root {
     margin: 0 10px;
     padding: 10px 20px;
-    background-color: #1976d2; /* This is a default Material-UI primary color */
+    background-color: #1976d2; /* This is a default MUI primary color */
     color: white;
     border-radius: 5px;
     transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;

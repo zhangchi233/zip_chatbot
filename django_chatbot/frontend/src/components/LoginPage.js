@@ -1,15 +1,16 @@
 import React, { Component } from 'react';
-import Button from "@material-ui/core/Button";
-import Grid from "@material-ui/core/Grid";
-import Typography from "@material-ui/core/Typography";
-import TextField from "@material-ui/core/TextField";
-import FormControl from "@material-ui/core/FormControl";
+import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import FormControl from "@mui/material/FormControl";
 import { Link } from "react-router-dom";
-import TokenContext from './TokenContext'; // Import the context
+import TokenContext from './TokenContext'; 
 import './LoginPage.css';
 import { authenticatedFetch } from './csrfTokenUtility';
-import Snackbar from '@material-ui/core/Snackbar';
-import Alert from '@material-ui/lab/Alert';  // This component is part of @material-ui/lab
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/lab/Alert';
+
 
 const BASE_API_URL = 'http://127.0.0.1:8000/api'
 
@@ -94,8 +95,8 @@ export default class LoginPage extends Component {
     render() {
         return (
             <>
-            <Link to="/register" className="signupLink">New User? Sign Up</Link>
-            <Grid container spacing={3} direction="column" alignItems="center" justify="center" style={{ minHeight: '100vh' }} className='rightAlignGrid'>
+            
+            <Grid container spacing={3} direction="column" alignItems="center" justifyContent="center" style={{ minHeight: '100vh' }} className='rightAlignGrid'>
                 <Typography variant="h4" component="h1" gutterBottom>
                     Welcome Back!
                 </Typography>
@@ -106,12 +107,12 @@ export default class LoginPage extends Component {
                     <TextField label="Username" type="username" name="username" value={this.state.username} onChange={this.handleInputChange} fullWidth />
                     <TextField label="Password" type="password" name="password" value={this.state.password} onChange={this.handleInputChange} fullWidth style={{ marginTop: '10px' }} />
                 </FormControl>
-                <Button variant="contained" color="primary" onClick={this.handleSubmit} >
+                <Button variant="contained" color="primary" onClick={this.handleSubmit}>
                     LOGIN
                 </Button>
-                <Link to="/forgot-password" style={{ marginTop: '15px' }}>Forget Password?</Link>
+                <Link to="/register" className="signupLink">New User? Sign Up</Link>
             </Grid>
-                <Snackbar 
+            <Snackbar 
                 open={this.state.snackbar.open}
                 autoHideDuration={6000}
                 onClose={this.handleSnackbarClose}

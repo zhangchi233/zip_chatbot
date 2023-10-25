@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "./InteractiveBody.css";
-import { Button } from "@material-ui/core";
+import Button from "@mui/material/Button";
 export default class InteractiveBody extends Component {
     state = {
         hoveredPart: null,

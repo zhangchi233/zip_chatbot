@@ -4,29 +4,30 @@ body {
     position: fixed;
 }
 
-
 a {
     text-decoration: none;
     color: #3f51b5;
     margin-top: 10px;
     display: inline-block;
+    transition: 0.3s;
+}
+
+a:hover {
+    text-decoration: underline;
 }
 
 button {
     border-radius: 25px;
-    transition: 0.3s; 
+    transition: background-color 0.3s, color 0.3s; 
 }
 
 button:hover {
     background-color: #007BFF; 
     color: #fff; 
 }
+
 .signupLink {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    color: #3f51b5; /* or any other color you prefer */
+    color: #3f51b5;
     cursor: pointer;
     font-weight: bold;
 }
-

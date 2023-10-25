@@ -1,24 +1,33 @@
 import React, { Component, useContext } from 'react';
-import Button from "@material-ui/core/Button";
-import Grid from "@material-ui/core/Grid";
-import Typography from "@material-ui/core/Typography";
-import TextField from "@material-ui/core/TextField";
-import Paper from "@material-ui/core/Paper";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
+import TokenContext from './TokenContext';
 import './ChatBotPage.css';
 import { authenticatedFetch } from './csrfTokenUtility.js';
-import Modal from '@material-ui/core/Modal';
-import Backdrop from '@material-ui/core/Backdrop';
-import Fade from '@material-ui/core/Fade';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Link from '@material-ui/core/Link';
-import TokenContext from './TokenContext';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
-import NavDropdown from 'react-bootstrap/NavDropdown';
+
+// import Button from "@material-ui/core/Button";
+// import Grid from "@material-ui/core/Grid";
+// import Typography from "@material-ui/core/Typography";
+// import TextField from "@material-ui/core/TextField";
+// import Paper from "@material-ui/core/Paper";
+// import List from "@material-ui/core/List";
+// import ListItem from "@material-ui/core/ListItem";
+// import ListItemText from "@material-ui/core/ListItemText";
+// import Modal from '@material-ui/core/Modal';
+// import Backdrop from '@material-ui/core/Backdrop';
+// import Fade from '@material-ui/core/Fade';
+// import Link from '@material-ui/core/Link';
+
+import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import Paper from "@mui/material/Paper";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import Modal from '@mui/material/Modal';
+import Backdrop from '@mui/material/Backdrop';
+import Fade from '@mui/material/Fade';
+import Link from '@mui/material/Link';
 
 import InteractiveBody from './InteractiveBody'
 
@@ -139,6 +148,10 @@ export default class ChatBotPage extends Component {
             this.handleSend();
         }
     }
+    handleUploadImage = () => {
+        const username = encodeURIComponent(this.context.username);  // Ensure the username is URL encoded to handle any special characters
+        window.open(`/api/upload_image?username=${username}`, '_blank');
+    }
     
     handleLogout = () => {
         // Make a request to the Django backend to logout
@@ -228,7 +241,7 @@ export default class ChatBotPage extends Component {
 
         return (
             <>
-            <Grid container spacing={3} direction="column" alignItems="center" justify="center" style={{ minHeight: '100vh' }}>
+            <Grid container spacing={3} direction="column" alignItems="center" justifyContent="center" style={{ minHeight: '100vh' }}>
                 
                 {/* Only Logout Link here */}
                 <div style={{ width: '90%', display: 'flex', justifyContent: 'flex-end' }}>
@@ -248,7 +261,9 @@ export default class ChatBotPage extends Component {
                     <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleDownloadReport} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Download Report
                     </Link>
-
+                    <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleUploadImage} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                        Upload Image
+                    </Link>
                     <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleClearChat} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Clear Chat
                     </Link>
@@ -274,7 +289,7 @@ export default class ChatBotPage extends Component {
                         ))}
                     </List>
                 </Paper>
-                <Grid className="input-container" container direction="row" alignItems="center" justify="center" spacing={2} style={{ width: '80%', position: 'fixed', bottom: '10px', background: '#fff' }}>
+                <Grid className="input-container" container direction="row" alignItems="center" justifyContent="center" spacing={2} style={{ width: '80%', position: 'fixed', bottom: '10px', background: '#fff' }}>
                     <Grid item xs={9}>
                         <TextField className="input-field"
                             fullWidth
@@ -286,7 +301,7 @@ export default class ChatBotPage extends Component {
                             style={{ backgroundColor: '#f0f0f0' }}
                         />
                     </Grid>
-                    <Grid item xs={3} direction='row'>
+                    <Grid item xs={3}>
                         <Button className="send-button" variant="contained" color="primary" fullWidth onClick={this.handleSend}>
                             Send
                         </Button>
@@ -295,14 +310,11 @@ export default class ChatBotPage extends Component {
                 </Grid>
             </Grid>
             <Modal
+                    className='interactive-body-modal'
                     aria-labelledby="interactive-body-modal"
                     open={this.state.showModal}
                     onClose={this.handleClose}
                     closeAfterTransition
-                    BackdropComponent={Backdrop}
-                    BackdropProps={{
-                        timeout: 500,
-                    }}
                     style={{
                         display: 'flex',
                         alignItems: 'center',
