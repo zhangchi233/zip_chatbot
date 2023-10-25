@@ -7,7 +7,6 @@
 <body>
 <form enctype='multipart/form-data' method="post">
     {% csrf_token %}
-    <p>Given your name: <input type="text" name="user_name"></p>
     <p>Choose file: <input type="file" name="images"></p>
     <p>supplement you want to make: <textarea name="report"></textarea></p>
     <p><button type="submit">Upload</button></p>

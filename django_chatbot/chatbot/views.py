@@ -425,9 +425,11 @@ class LastTenChatsView(generics.ListAPIView):
 def upload_image(request):
 
     if request.method == 'POST':
+        username = request.GET.get('username')
+        user = User.objects.get(username=username)
         image = request.FILES.get('images')
         report = request.POST.get('report')
-        user = request.user.username
+
         file = Report(user=user,report=report,images=image)
         file.save()
         return redirect('loginapi')

@@ -5,4 +5,4 @@ class ReportForm(forms.ModelForm):
 
     class Meta:
         model = Report
-        fields = ['user','report', 'images']
+        fields = ['report', 'images']
