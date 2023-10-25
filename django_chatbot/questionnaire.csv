@@ -1,0 +1,17 @@
+body_part;question;gender
+head;mouth;both
+head;ear;both
+head;teeth;both
+head;skin;both
+head;eye;both
+head;bone;both
+head;nose;both
+chest;heart;both
+chest;lung;both
+chest;breasts;female
+chest;neck;both
+arms;finger;both
+arms;skin;both
+arms;vine;both
+stomach;stomach;both
+stomach; uterus;female

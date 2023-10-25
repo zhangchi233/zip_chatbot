@@ -25,8 +25,8 @@ from rest_framework.permissions import AllowAny
 from django.utils import timezone
 from django.conf import settings
 from .models import Report
-
-
+import pandas as pd
+import json
 # from django.http import HttpResponse
 
 BASE_DIR = str(settings.BASE_DIR)
@@ -34,6 +34,7 @@ open_ai_key_path = BASE_DIR+"/api_key.txt"
 with open(open_ai_key_path, "r") as f:
     openai_api_key = f.read().strip()
 openai.api_key = openai_api_key
+
 
 
 class ChatView(generics.ListAPIView):
@@ -173,13 +174,20 @@ class OpenaiView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request):
+        path_questionnaire = BASE_DIR + "/questionnaire.csv"
+        dataframe = pd.read_csv(path_questionnaire,delimiter=";")
+        dataframe = dataframe.dropna()
+        # convert to json file and send to front end
+        dataframe = dataframe.to_json(orient="records")
+
         username = request.data.get('username')
         password = request.data.get('password')
         user = authenticate(username=username, password=password)
         if user:
             token, _ = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key})
+            return Response({'token': token.key,'qeustionnaire':dataframe})
         else:
             return Response({'error': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
 

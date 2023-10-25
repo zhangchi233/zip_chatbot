@@ -266,7 +266,7 @@ export default class ChatBotPage extends Component {
                         Show Anatomy
                     </Link>
                     <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleDownloadReport} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
-                        Download Report
+                        Download Report asdfa
                     </Link>
                     <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleUploadReport} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Upload Report

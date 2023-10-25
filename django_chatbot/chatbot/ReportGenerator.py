@@ -13,13 +13,13 @@ import datetime
 class PDFReportView(View):
     def get(self, request):
 
-        starttime = request.GET.get('starttime')
+        #starttime = request.GET.get('starttime')
 
-        user_id = request.GET.get('username')
+        #user_id = request.GET.get('username')
 
-        summary = Summary.objects.filter(user_id=user_id, created_at=starttime).first().summary
-
-
+       #summary = Summary.objects.filter(user_id=user_id, created_at=starttime).first().summary
+        summary = "asdfasdfasdf\n asdfasdfcdsadffad\nasdfasdfasdfasdf\nfasdcasdcasdfasdfasdcasdfasdfasdaffdasadfasdcasdfasdcasdcasdcasdcasdcasdcasdcasdacdc a"
+        user_id = "asdfasdfasdf"
         # Create a PDF document using ReportLab
         from io import BytesIO
         buffer = BytesIO()
