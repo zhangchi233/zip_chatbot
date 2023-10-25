@@ -186,19 +186,26 @@ class OpenaiView(APIView):
         # response = "hey this is you medical assistant. Welcome to LLMbq medical assistant. I am here to help you."
         response_continue = response.split("\n")[0]
         response = "\n".join(response.split("\n")[1:]).strip()
+        if len(response.strip())==0:
+            response = response_continue
+            response_continue = "yes, chatgpt will continue"
+
         # Save the message and response
         chat = Chat(user=request.user, message=message, starttime=starttime,
                     response=response, created_at=timezone.now())
         chat.save()
         response_continue = response_continue.lower()
-        print("here 2")
+        print("response is: "+response_continue)
+
         # response_continue = "yes, chatgpt will continue"
         if "yes, chatgpt will continue" in response_continue:
             # added Timezone.now() to the context
+            if len(response.strip())==0:
+                response = "the web connection is not stable, please try again"
             return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response,'conversation':False})
         else:
             print("here 3")
-            if "no, chatgpt will give summary" in response_continue:
+            if "no, chatgpt will give a summary" in response_continue:
                 print("here 4")
                 summary_message = "given the conversation above, please give a summary of the patient's health condition in the " \
                                   "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her " \
@@ -210,11 +217,13 @@ class OpenaiView(APIView):
                                   " if you think the information is enough please type: 'no, chatgpt will give summary' please be cautious as possible"
                 response = ask_openai(summary_message, chat_messages)
                 # response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
+
+                response = response+"\n"+"please type:'yes' or 'no' to indicate whether the summary is correct or not \n" \
+                                         "if you agree with the summary please sign and upload"
+                print("summary")
                 chat = Chat(user=request.user, message=summary_message, starttime=starttime,
                             response=response, created_at=timezone.now())
                 chat.save()
-                response = response#+"\n"+"please type:'yes' or 'no' to indicate whether the summary is correct or not"
-                print("summary")
                 user_id = request.user
                 summary = Summary(user=user_id, summary=response, created_at=starttime)
                 print("summary 2")
@@ -224,17 +233,21 @@ class OpenaiView(APIView):
 
 
             else:
-                print("here 5")
-                message_judge = " do you think based on the dialogue history it is enough to obtaine the health condition for cardiologist ?, "
+                print("here 5 "+response_continue)
+                message_judge = " do you think based on the dialogue history it is enough to obtaine the health condition for cardiologist ?," \
+                                "if you think the information is not enough,please type: 'yes, chatgpt will continue' " \
 
                 response_continue = ask_openai(message_judge, chat_messages)
                 if "yes, chatgpt will continue" in response_continue:
-                    response = ask_openai("repeat your question, doctor", chat_messages )
+
+                    response = ask_openai("rephase and stree your question,again, doctor", chat_messages )
                     # added Timezone.now() to the context
-                    response = "\n".join(response.split("continue")[1:]).strip()
+
                     chat = Chat(user=request.user, message="repeat your question, doctor", starttime=starttime,
                                 response=response, created_at=timezone.now())
                     chat.save()
+                    if len(response.strip()) == 0:
+                        response = "the web connection is not stable, please try again"
                     return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response,'conversation':False})
 
 
@@ -245,9 +258,15 @@ class OpenaiView(APIView):
                                   "must be included"
                 response = ask_openai(summary_message, chat_messages)
                 response = response.split("\n")[1:]
-                response = "\n".join(response)+"\n"+"please type:'yes' or 'no' to indicate whether the summary is correct or not"
+                response = "\n".join(response)+"\n"+"please type:'yes' or 'no' to indicate whether the summary is correct or not\n " \
+                                                    "if you agree with the summary please sign and upload"
                 prior_greeting = "You have finished the dialogue, and here is the summary of our conversation: \n"
                 response = prior_greeting + response
+                user_id = request.user
+                summary = Summary(user=user_id, summary=response, created_at=starttime)
+                print("summary 2")
+                summary.save()
+                print("summary 3")
                 #response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
                 chat = Chat(user=request.user, message=summary_message, starttime=starttime,
                             response=response, created_at=timezone.now())
@@ -336,10 +355,10 @@ def ask_openai(message,chats):
                                           "and you have to end the dialogue with summary "
                                           "the most important thing is that you need to response in such format: "
                                           "1. if you think the information is not enough,please type: 'yes, chatgpt will continue \n' in the beginning "
-                                          "if you think the dialogue will continue, add an indication: 'yes, chatgpt will continue \n' in the beginning" 
+                                          "if you think the dialogue will continue, add an indication: 'no, chatgpt will give a summary \n' in the beginning" 
                                           "2. no matter what content you type, what language you use, you need to add the indication in english in the beginning"
-                                           "for example: if you use chinese you should say 'yes, chatgpt will continue \n 你有头痛吗' or 'no, chatgpt will give summary \n 好的我完成询问，这里是你的报告'"
-                                           "please be cautious as possible, and remember to ask question one by one and collect enough information to give summary of "
+                                           "for example: if you use chinese you should say 'yes, chatgpt will continue \n 你有头痛吗' or 'no, chatgpt will give a summary \n 好的我完成询问，这里是你的报告'"
+                                           "3. please be cautious as possible, and remember to ask question one by one and collect enough information to give summary of "
                                            "the patient's health condition for cardiologist"
                                           },
             {"role":"assistant","content":"you give indication whether the dailogue will continue or not in the beginning in such way of any true response:"
