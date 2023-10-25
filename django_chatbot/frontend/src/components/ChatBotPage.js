@@ -2,20 +2,6 @@ import React, { Component, useContext } from 'react';
 import TokenContext from './TokenContext';
 import './ChatBotPage.css';
 import { authenticatedFetch } from './csrfTokenUtility.js';
-
-// import Button from "@material-ui/core/Button";
-// import Grid from "@material-ui/core/Grid";
-// import Typography from "@material-ui/core/Typography";
-// import TextField from "@material-ui/core/TextField";
-// import Paper from "@material-ui/core/Paper";
-// import List from "@material-ui/core/List";
-// import ListItem from "@material-ui/core/ListItem";
-// import ListItemText from "@material-ui/core/ListItemText";
-// import Modal from '@material-ui/core/Modal';
-// import Backdrop from '@material-ui/core/Backdrop';
-// import Fade from '@material-ui/core/Fade';
-// import Link from '@material-ui/core/Link';
-
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
@@ -25,9 +11,10 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Modal from '@mui/material/Modal';
-import Backdrop from '@mui/material/Backdrop';
 import Fade from '@mui/material/Fade';
 import Link from '@mui/material/Link';
+import { AppBar, Toolbar, Container } from "@mui/material";
+import { makeStyles } from "@mui/styles";
 
 import InteractiveBody from './InteractiveBody'
 
@@ -241,20 +228,11 @@ export default class ChatBotPage extends Component {
 
         return (
             <>
+            <div className="chatbot-header">
             <Grid container spacing={3} direction="column" alignItems="center" justifyContent="center" style={{ minHeight: '100vh' }}>
                 
                 {/* Only Logout Link here */}
                 <div style={{ width: '90%', display: 'flex', justifyContent: 'flex-end' }}>
-                    {/* <Button className="body-button" variant="contained" color="primary" onClick={this.handleShowBody}>
-                        Show Anatomy
-                    </Button>
-                    <Button className="body-button" variant="contained" color="primary" onClick={this.handleDownloadReport}>
-                        Download Report
-                    </Button>
-
-                    <Button className="body-button" variant="contained" color="primary" onClick={this.handleClearChat}>
-                        Clear Chat
-                    </Button> */}
                     <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleShowBody} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Show Anatomy
                     </Link>
@@ -309,6 +287,7 @@ export default class ChatBotPage extends Component {
                     </Grid>        
                 </Grid>
             </Grid>
+            </div>
             <Modal
                     className='interactive-body-modal'
                     aria-labelledby="interactive-body-modal"

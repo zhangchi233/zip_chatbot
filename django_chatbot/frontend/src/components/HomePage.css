@@ -63,6 +63,8 @@
 .button-container {
     display: flex;
     align-items: center;
+    position: absolute;
+    right: 10px;
 }
 
 .appbar-link {

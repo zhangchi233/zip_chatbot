@@ -1,9 +1,12 @@
 
-.AppBar {
-    background-color: #0088ff; /* You can change this color to any shade of blue you prefer */
-    height: auto;
+.chatbot-header {
+    flex-grow: 1;
+    display: flex;
+    justify-content: space-between;
+    background-image: url('../../static/images/medical_records1.jpg');
+    background-size: 'cover';
+    background-position: 'center';
 }
-
 /* Main chat container */
 .chat-container {
     box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
