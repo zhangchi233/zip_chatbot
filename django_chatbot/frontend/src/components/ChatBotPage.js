@@ -18,7 +18,6 @@ import { makeStyles } from "@mui/styles";
 
 import InteractiveBody from './InteractiveBody'
 
-const BASE_API_URL = 'http://127.0.0.1:8000/api/'
 export default class ChatBotPage extends Component {
     static contextType = TokenContext;
     constructor(props) {
