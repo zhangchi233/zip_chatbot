@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'channels',
     'frontend.apps.FrontendConfig',
     'rest_framework',
-    # 'corsheaders',
+    'corsheaders',
     'rest_framework.authtoken',
 ]
 
@@ -55,7 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #  'corsheaders.middleware.CorsMiddleware',
+     'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'django_chatbot.urls'
@@ -78,7 +78,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django_chatbot.wsgi.application'
 
-
+CORS_ORIGIN_ALLOW_ALL = True
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
