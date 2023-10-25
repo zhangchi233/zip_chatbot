@@ -19,14 +19,14 @@ class PDFReportView(View):
 
         user_id = request.GET.get('username')
         user = request.user
-
+        print("user_id", user_id)
         summary = Summary.objects.filter(user=user, created_at__date=starttime,
                                             created_at__hour=starttime.hour,
                                             created_at__minute=starttime.minute,
 
                                          ).first()
         #print(summary)
-        print("user_id",user_id)
+
         if summary is None:
             summary = "No summary found"
         else:

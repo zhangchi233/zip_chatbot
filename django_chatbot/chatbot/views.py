@@ -213,7 +213,7 @@ class OpenaiView(APIView):
                 chat = Chat(user=request.user, message=summary_message, starttime=starttime,
                             response=response, created_at=timezone.now())
                 chat.save()
-                response = response+"\n"+"please type:'yes' or 'no' to indicate whether the summary is correct or not"
+                response = response#+"\n"+"please type:'yes' or 'no' to indicate whether the summary is correct or not"
                 print("summary")
                 user_id = request.user
                 summary = Summary(user=user_id, summary=response, created_at=starttime)
@@ -227,12 +227,12 @@ class OpenaiView(APIView):
                 print("here 5")
                 message_judge = " do you think based on the dialogue history it is enough to obtaine the health condition for cardiologist ?, "
 
-                response_continue = ask_openai(message_judge, chat_messages+"\n"+response_continue+"\n"+response)
+                response_continue = ask_openai(message_judge, chat_messages)
                 if "yes, chatgpt will continue" in response_continue:
-                    response = ask_openai("repeat your question, doctor?", chat_messages + "\n" + response_continue + "\n" + response)
+                    response = ask_openai("repeat your question, doctor", chat_messages )
                     # added Timezone.now() to the context
                     response = "\n".join(response.split("continue")[1:]).strip()
-                    chat = Chat(user=request.user, message="repeat your question, doctor?", starttime=starttime,
+                    chat = Chat(user=request.user, message="repeat your question, doctor", starttime=starttime,
                                 response=response, created_at=timezone.now())
                     chat.save()
                     return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response,'conversation':False})
@@ -334,14 +334,16 @@ def ask_openai(message,chats):
                                           "Be aware of the context. If a patient inputs pain in another body part in the middle of the conversation, confirm whether it was a mistake or not."
                                           "Ensure that you need to ask one question at a time (it is really important) and be careful to choose language you use"
                                           "and you have to end the dialogue with summary "
+                                          "the most important thing is that you need to response in such format: "
+                                          "1. if you think the information is not enough,please type: 'yes, chatgpt will continue \n' in the beginning "
+                                          "if you think the dialogue will continue, add an indication: 'yes, chatgpt will continue \n' in the beginning" 
+                                          "2. no matter what content you type, what language you use, you need to add the indication in english in the beginning"
+                                           "for example: if you use chinese you should say 'yes, chatgpt will continue \n 你有头痛吗' or 'no, chatgpt will give summary \n 好的我完成询问，这里是你的报告'"
+                                           "please be cautious as possible, and remember to ask question one by one and collect enough information to give summary of "
+                                           "the patient's health condition for cardiologist"
                                           },
             {"role":"assistant","content":"you give indication whether the dailogue will continue or not in the beginning in such way of any true response:"
-                                          "if you think the dialogue will continue, add an indication: 'yes, chatgpt will continue \n' in the beginning"
-                                           "if you think the dialogue don't need to be continued, add an indication: 'no, chatgpt will give summary \n' in the beginning"
-                                           "no matter what content you type, what language you use, you need to add the indication in english in the beginning"
-                                           "for example: 'yes, chatgpt will continue \n do you have a headache' or 'no, chatgpt will give summary \n here is the summary'"
-                                           "please be cautious as possible, and remember to ask question one by one and collect enough information to give summary of "
-                                           "the patient's health condition for cardiologist"},
+                                          },
             {"role":"assistant","content":"aftef ask question following socarates model, you need to keep ask general questions in 5 categoreis (1. medical history and condition"
                                           "2. physical health and symptoms, 3. mental health and behavior, 4. social and personal information, and 5. sexual health and behavior):"
                                           " "+general_questions},
