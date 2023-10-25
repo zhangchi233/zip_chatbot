@@ -1,8 +1,8 @@
-const BASE_API_URL = 'http://127.0.0.1:8000/api';
+
 
 async function fetchCSRFToken() {
     try {
-        const response = await fetch(`${BASE_API_URL}/get-csrf-token`);
+        const response = await fetch(`/get-csrf-token`);
         const data = await response.json();
         console.log('Successfully fetched 2 csrf token')
         return data.csrfToken;

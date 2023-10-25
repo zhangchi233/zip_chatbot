@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import TokenContext from './TokenContext'; // Import the context
 import './RegisterPage.css';
 import { authenticatedFetch } from './csrfTokenUtility';
-const BASE_API_URL = 'http://127.0.0.1:8000/api'
+
 
 
 export default class RegisterPage extends Component {
@@ -42,7 +42,7 @@ export default class RegisterPage extends Component {
         };
     
         // Send a POST request to the Django server
-        authenticatedFetch('http://127.0.0.1:8000/api/register', {
+        authenticatedFetch('api/register', {
             method: 'POST',
             body: JSON.stringify(formData),
         })
