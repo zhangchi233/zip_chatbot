@@ -25,6 +25,7 @@ class Report(models.Model):
     
 class Summary(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    #user = models.CharField(max_length=100)
     summary = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):

@@ -128,7 +128,7 @@ export default class ChatBotPage extends Component {
     }
     handleDownloadReport = () => {
         const username = encodeURIComponent(this.context.username);  // Ensure the username is URL encoded to handle any special characters
-        window.open(`/api/download_report?username=${username}`, '_blank');
+        window.open(`/api/download?username=${username}&starttime=${this.state.starttime}`, '_blank');
     }
 
     handleClearChat = () => {
@@ -149,8 +149,36 @@ export default class ChatBotPage extends Component {
         }
     }
     handleUploadImage = () => {
-        const username = encodeURIComponent(this.context.username);  // Ensure the username is URL encoded to handle any special characters
-        window.open(`/api/upload?username=${username}`, '_blank');
+
+    var username = this.context.username;
+    var authToken = this.context.token;
+    // Create a request object
+    window.open(`/upload?username=${username}`, '_blank');
+    const request = new Request(`/upload?username=${username}`, {
+        method: 'GET',
+
+        headers: {
+            'Authorization': `Token ${authToken}`, // Include the authentication token
+        },
+    });
+
+    fetch(request)
+        .then(response => {
+            if (response.status === 200) {
+                // return redner(request, 'frontend/index.html')
+                console.log("success")
+                return response
+                // Handle a successful response (e.g., redirect or show a success message)
+
+            } else {
+                console.log("failed")
+
+                // Handle errors (e.g., display an error message)
+            }
+        })
+        .catch(error => {
+            console.error('Request error:', error);
+        });
     }
     
     handleLogout = () => {

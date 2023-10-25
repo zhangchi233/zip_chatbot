@@ -153,7 +153,7 @@ class OpenaiView(APIView):
         message = data.get('message')
         nmessages = data.get('nmessages')
         # print("nmessages is",nmessages)
-        
+
         # Get the start time
         starttime = data.get('starttime')
         starttime = datetime.datetime.strptime(starttime, '%Y-%m-%d %H:%M:%S.%f')
@@ -215,7 +215,8 @@ class OpenaiView(APIView):
                 chat.save()
                 response = response
                 print("summary")
-                summary = Summary(user=request.user, summary=response, created_at=starttime)
+                user_id = request.user
+                summary = Summary(user=user_id, summary=response, created_at=starttime)
                 print("summary 2")
                 summary.save()
                 print("summary 3")
@@ -400,12 +401,13 @@ class LastTenChatsView(generics.ListAPIView):
         user = self.request.user
         return Chat.objects.filter(user=user).order_by('-created_at')[:10]
 
-class UploadImage(APIView):
-    def post(self, request):
+def upload_image(request):
+
+    if request.method == 'POST':
         image = request.FILES.get('images')
         report = request.POST.get('report')
         user = request.user.username
         file = Report(user=user,report=report,images=image)
         file.save()
-        return Response({'message': 'Image uploaded successfully'}, status=status.HTTP_201_CREATED)
-
+        return redirect('loginapi')
+    return render(request,'add_user_image.html')

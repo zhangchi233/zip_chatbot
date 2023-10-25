@@ -14,12 +14,26 @@ class PDFReportView(View):
     def get(self, request):
 
         starttime = request.GET.get('starttime')
-        print("user_id is:")
-        user_id = request.user
-        print("user_id is:")
-        print(user_id.username)
-        summary = Summary.objects.filter(user_id=user_id, created_at=starttime).first().summary
+        starttime = datetime.datetime.strptime(starttime, '%Y-%m-%d %H:%M:%S.%f')
+        
+
+        user_id = request.GET.get('username')
+        user = request.user
+
+        summary = Summary.objects.filter(user=user, created_at__date=starttime,
+                                            created_at__hour=starttime.hour,
+                                            created_at__minute=starttime.minute,
+
+                                         ).first()
+        #print(summary)
+        print("user_id",user_id)
+        if summary is None:
+            summary = "No summary found"
+        else:
+            summary = summary.summary
+
         # Create a PDF document using ReportLab
+
         from io import BytesIO
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4)
