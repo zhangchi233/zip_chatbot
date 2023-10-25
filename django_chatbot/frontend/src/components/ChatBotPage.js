@@ -74,7 +74,7 @@ export default class ChatBotPage extends Component {
             messages: newMessages,
             inputMessage: "",
             starttime: chatstarttime,
-            nmessages: userMessageCount
+
         }, () => { // Using callback form of setState to ensure we have the latest state
             this.saveMessagesLocally(this.state.messages);
         });
@@ -82,10 +82,7 @@ export default class ChatBotPage extends Component {
         // console.log(starttime, chatstarttime);
         console.log("message count", userMessageCount);
         // console.log("hello")
-
         if (inputMessage.trim()) {
-            
-
             // Send the input message to the Django backend
             authenticatedFetch("/api/openai", {
                 method: "POST",
@@ -99,7 +96,8 @@ export default class ChatBotPage extends Component {
                 const botTime = this.getCurrentDateTime();
                 this.setState(prevState => ({
                     messages: [...prevState.messages, { text: data.response, sender: 'bot', time: botTime }],
-                    finishConversation: data.conversation
+                    finishConversation: data.conversation,
+                    nmessages: userMessageCount,
                 }), () => {
                     this.saveMessagesLocally(this.state.messages);  // Save the messages to local storage
                 });
@@ -127,6 +125,7 @@ export default class ChatBotPage extends Component {
             messages: newMessages,
             nmessages: 0,
             starttime: null,
+            finishConversation: false
         }));
     }
     handleKeyDown = (event) => {
@@ -183,6 +182,9 @@ export default class ChatBotPage extends Component {
     
     componentDidUpdate(prevProps, prevState) {
         // Check if the modal was closed and a body part was previously selected
+        if(prevState.finishConversation !== this.state.finishConversation ) {
+            localStorage.setItem('finishConversation', this.state.finishConversation);
+        }
         if (prevState.showModal && !this.state.showModal && this.state.bodyPartSelected) {
             this.handleSend();
             this.setState({
@@ -191,11 +193,9 @@ export default class ChatBotPage extends Component {
         }
     }
     componentDidMount()  {
-        
-        // console.log(this.state.nmessages)
-        // to remain logged in when refreshing
         const token = localStorage.getItem('authToken');
         const username = localStorage.getItem('authUsername'); 
+        const storedFinishConversation = localStorage.getItem('finishConversation');
         console.log("Token, username", token, username)
         this.context.setLoginData(token, username);
         if (!token || !username) {
@@ -213,11 +213,13 @@ export default class ChatBotPage extends Component {
             const newMessages = [...messages, newMessage];
             this.setState(({
                 messages: newMessages,
+                finishConversation: storedFinishConversation === 'true' ? true : false,
             }));
         } else {
             this.setState({ 
                 messages: storedMessages,
                 starttime: chatstarttime,
+                finishConversation: storedFinishConversation === 'true' ? true : false,
              });
         }
 
@@ -230,19 +232,19 @@ export default class ChatBotPage extends Component {
             <>
             <div className="chatbot-header">
             <Grid container spacing={3} direction="column" alignItems="center" justifyContent="center" style={{ minHeight: '100vh' }}>
-                
                 {/* Only Logout Link here */}
                 <div style={{ width: '90%', display: 'flex', justifyContent: 'flex-end' }}>
                     <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleShowBody} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Show Anatomy
                     </Link>
-                    <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleDownloadReport} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                    {this.state.finishConversation ? 
+                    <Link href="#" className="report-Link" variant="contained" color="primary" onClick={this.handleDownloadReport} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Download Report
-                    </Link>
-                    <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleUploadImage} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                    </Link> : null}
+                    <Link href="#" className="image-Link" variant="contained" color="primary" onClick={this.handleUploadImage} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Upload Image
                     </Link>
-                    <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleClearChat} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                    <Link href="#" className="clear-Link" variant="contained" color="primary" onClick={this.handleClearChat} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Clear Chat
                     </Link>
                     <Link href="#" onClick={this.handleLogout} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
@@ -250,14 +252,6 @@ export default class ChatBotPage extends Component {
                     </Link>
                     
                 </div>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '50%' }}>
-                    <Typography variant="h4" component="h1" gutterBottom>
-                        
-                    </Typography>
-                    
-                </div>
-            
                 <Paper className="chat-container" style={{ height: '75%', width: '90%', overflowY: 'auto', marginBottom: '20px' }}>
                     <List>
                         {messages.map((message, index) => (
