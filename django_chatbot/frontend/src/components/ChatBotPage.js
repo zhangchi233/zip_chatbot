@@ -150,7 +150,7 @@ export default class ChatBotPage extends Component {
     }
     handleUploadImage = () => {
         const username = encodeURIComponent(this.context.username);  // Ensure the username is URL encoded to handle any special characters
-        window.open(`/upload?username=${username}`, '_blank');
+        window.open(`/api/upload?username=${username}`, '_blank');
     }
     
     handleLogout = () => {

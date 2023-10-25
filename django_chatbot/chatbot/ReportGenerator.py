@@ -14,7 +14,10 @@ class PDFReportView(View):
     def get(self, request):
 
         starttime = request.GET.get('starttime')
-        user_id = request.GET.get('username')
+        print("user_id is:")
+        user_id = request.user
+        print("user_id is:")
+        print(user_id.username)
         summary = Summary.objects.filter(user_id=user_id, created_at=starttime).first().summary
         # Create a PDF document using ReportLab
         from io import BytesIO
