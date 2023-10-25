@@ -213,7 +213,7 @@ class OpenaiView(APIView):
                 chat = Chat(user=request.user, message=summary_message, starttime=starttime,
                             response=response, created_at=timezone.now())
                 chat.save()
-                response = response
+                response = response+"\n"+"please type:'yes' or 'no' to indicate whether the summary is correct or not"
                 print("summary")
                 user_id = request.user
                 summary = Summary(user=user_id, summary=response, created_at=starttime)
