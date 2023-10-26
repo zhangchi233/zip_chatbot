@@ -24,12 +24,17 @@ class PDFReportView(View):
         # get the latest summary
         summary = Summary.objects.filter(user__username=user_id,
                                          ).order_by('-created_at').first()
-        print(summary)
+
 
         if summary is None:
             summary = "No summary found"
         else:
             summary = summary.summary
+            # remove Please confirm 'yes' or 'no'. please type:'yes' or 'no' to indicate whether the summary is correct or not if you agree with the summary please sign and upload
+            summary = summary.replace("Please confirm 'yes' or 'no'. please type:'yes' or 'no' to indicate whether the summary is correct or not if you agree with the summary please sign and upload",
+                                      "Please sign and upload the summary")
+            # remove 'no, chatgpt will give a summary Upon analyzing the conversation,
+            summary = summary.replace("'no, chatgpt will give a summary Upon analyzing the conversation, ", "Here is your report:")
 
         # Create a PDF document using ReportLab
 

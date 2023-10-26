@@ -214,7 +214,8 @@ class OpenaiView(APIView):
                                   " don't be too long nor too short to end questioning," \
                                   " and remeber you need to ask question from specific to general " \
                                   " if you think the information is not enough,please type: 'yes, chatgpt will continue' " \
-                                  " if you think the information is enough please type: 'no, chatgpt will give summary' please be cautious as possible"
+                                  " if you think the information is enough please type: 'no, chatgpt will give summary' please be cautious as possible" \
+                                  "if the user said 'no', you have to aks for more information from patient"
                 response = ask_openai(summary_message, chat_messages)
                 # response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
 
@@ -255,7 +256,8 @@ class OpenaiView(APIView):
                 summary_message = "given the conversation above, please give a summary of the patient's health condition in the " \
                                   "following format: 'the patient has a pain in his/her head, and he/she has a pain in his/her " \
                                   "based on chat history, you can print summary in multi linguistic way, but please make sure the english version " \
-                                  "must be included"
+                                  "must be included." \
+                                  "if the user said 'no', you have to ask for more information from patient"
                 response = ask_openai(summary_message, chat_messages)
                 response = response.split("\n")[1:]
                 response = "\n".join(response)+"\n"+"please type:'yes' or 'no' to indicate whether the summary is correct or not\n " \
