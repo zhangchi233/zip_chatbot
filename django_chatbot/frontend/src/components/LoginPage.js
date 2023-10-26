@@ -9,7 +9,7 @@ import TokenContext from './TokenContext';
 import './LoginPage.css';
 import { authenticatedFetch } from './csrfTokenUtility';
 import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/lab/Alert';
+import Alert from '@mui/material/Alert';
 
 
 const BASE_API_URL = 'http://127.0.0.1:8000/api'
@@ -90,6 +90,17 @@ export default class LoginPage extends Component {
         });
         
         
+    }
+    handleSnackbarClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        this.setState({
+            snackbar: {
+                open: false,
+                message: '',
+            },
+        });
     }
     componentDidMount() {
         console.log(this.context.token, this.context.username);

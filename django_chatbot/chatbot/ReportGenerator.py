@@ -7,15 +7,26 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
 import os
 from .models import Summary
 import datetime
+from rest_framework.response import Response
+
+@permission_classes([IsAuthenticated])    
 class PDFReportView(View):
     def get(self, request):
-
         starttime = request.GET.get('starttime')
+        starttime = datetime.datetime.strptime(starttime, '%Y-%m-%d %H:%M:%S.%f')
         user_id = request.GET.get('username')
-        summary = Summary.objects.filter(user_id=user_id, created_at=starttime).first().summary
+        user = request.user
+        print(user_id)
+        summary = Summary.objects.filter(user__username=user_id, ).order_by('-created_at').first()
+        if summary is None:
+            summary = "No summary found"
+        else:
+            summary = summary.summary
         # Create a PDF document using ReportLab
         from io import BytesIO
         buffer = BytesIO()

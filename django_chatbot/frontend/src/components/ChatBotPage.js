@@ -14,8 +14,9 @@ import Modal from '@mui/material/Modal';
 import Fade from '@mui/material/Fade';
 import Link from '@mui/material/Link';
 import UploadImagePage from './UploadImagePage';
-import { AppBar, Toolbar, Container } from "@mui/material";
+import { AppBar, Toolbar, Container, Alert } from "@mui/material";
 import { makeStyles } from "@mui/styles";
+import Snackbar from '@mui/material/Snackbar';
 
 import InteractiveBody from './InteractiveBody'
 
@@ -33,6 +34,10 @@ export default class ChatBotPage extends Component {
             finishConversation: false,
             starttime: null,
             UploadImage: false,
+            snackbar: {
+                open: false,
+                message: '',
+            },
         };
     }
     handleInputChange = (event) => {
@@ -114,11 +119,17 @@ export default class ChatBotPage extends Component {
         this.setState({ showModal: false, UploadImage: false });
     }
     handleDownloadReport = () => {
-     // Ensure the username is URL encoded to handle any special characters
-        const username = encodeURIComponent(this.context.username);
-        const chatstarttime = localStorage.getItem('starttime');
-        window.open(`/api/download_report?username=${username}&starttime=${chatstarttime}`, '_blank');
-        
+        if (!this.state.finishConversation) {
+            this.setState({
+                snackbar: {
+                    open: true,
+                    message: 'Please finish the conversation first.',
+                },
+            });
+            return;
+        }
+        const username = encodeURIComponent(this.context.username);  // Ensure the username is URL encoded to handle any special characters
+        window.open(`api/download_report?username=${username}&starttime=${this.state.starttime}`, '_blank');
     }
 
     handleClearChat = () => {
@@ -229,7 +240,17 @@ export default class ChatBotPage extends Component {
         }
 
     }
-    
+    handleSnackbarClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        this.setState({
+            snackbar: {
+                open: false,
+                message: '',
+            },
+        });
+    }
     render() {
         const { messages, inputMessage } = this.state;
 
@@ -321,6 +342,16 @@ export default class ChatBotPage extends Component {
                         </div>
                     </Fade>
             </Modal>
+            <Snackbar 
+                open={this.state.snackbar.open}
+                autoHideDuration={6000}
+                onClose={this.handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            >
+                <Alert onClose={this.handleSnackbarClose} severity="error">
+                    {this.state.snackbar.message}
+                </Alert>
+             </Snackbar>
         </>
 
         );

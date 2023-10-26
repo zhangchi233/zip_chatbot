@@ -4,6 +4,8 @@ import { authenticatedFetch } from './csrfTokenUtility';
 import TokenContext from './TokenContext';
 import { TextField, Button } from '@mui/material';
 import './UploadImagePage.css';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 
 export default class UploadImagePage extends Component {
     static contextType = TokenContext;
@@ -12,6 +14,10 @@ export default class UploadImagePage extends Component {
         this.state = {
             selectedFile: null,
             reportText: '',
+            snackbar: {
+                open: false,
+                message: '',
+            },
         };
     }
 	// On file select (from the pop up)
@@ -24,7 +30,12 @@ export default class UploadImagePage extends Component {
 	onFileUpload = () => {
         const file = this.uploadInput.files[0];
         if (!file) {
-            alert("Please select a file to upload.");
+            this.setState({
+                snackbar: {
+                    open: true,
+                    message: 'No file selected!',
+                },
+            });
             return;
         }
         const username = localStorage.getItem('authUsername');
@@ -42,12 +53,36 @@ export default class UploadImagePage extends Component {
             body: formData,
         }).then(response => {
             console.log(response);
+            if (response.status === 200) {
+                this.setState({
+                    snackbar: {
+                        open: true,
+                        message: 'Upload successful!',
+                    },
+                });
+            } else {
+                this.setState({
+                    snackbar: {
+                        open: true,
+                        message: 'Upload failed!',
+                    },
+                });
+            }
         }).catch(error => {
             console.log(error);
         })
 	};
-
-
+    handleSnackbarClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        this.setState({
+            snackbar: {
+                open: false,
+                message: '',
+            },
+        });
+    }
 	render() {
 
 		return (
@@ -70,7 +105,18 @@ export default class UploadImagePage extends Component {
                     <Button className="upload-button" variant="contained" color="primary" onClick={this.onFileUpload}>
                         Upload!
                     </Button>
+                    <Snackbar 
+                        open={this.state.snackbar.open}
+                        autoHideDuration={6000}
+                        onClose={this.handleSnackbarClose}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                    >
+                        <Alert onClose={this.handleSnackbarClose} severity="error">
+                            {this.state.snackbar.message}
+                        </Alert>
+                    </Snackbar>
             </div>
+            
 		);
 	}
 }
