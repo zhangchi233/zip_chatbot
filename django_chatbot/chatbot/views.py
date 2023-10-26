@@ -195,7 +195,7 @@ class OpenaiView(APIView):
         chat.save()
         response_continue = response_continue.lower()
         # response_continue = "yes, chatgpt will continue"
-        response_continue = "no, chatgpt will give summary"
+        # response_continue = "no, chatgpt will give summary"
         if "yes, chatgpt will continue" in response_continue:
             # added Timezone.now() to the context
             if len(response.strip())==0:
@@ -214,9 +214,9 @@ class OpenaiView(APIView):
                 response = ask_openai(summary_message, chat_messages)
                 # response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
 
-                # response = response+"\n"+"please type:'yes' or 'no' to indicate whether the summary is correct or not \n" \
-                #                          "if you agree with the summary please sign and upload"
-                response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
+                response = response+"\n"+"please type:'yes' or 'no' to indicate whether the summary is correct or not \n" \
+                                         "if you agree with the summary please sign and upload"
+                # response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
                 chat = Chat(user=request.user, message=summary_message, starttime=starttime,
                             response=response, created_at=timezone.now())
                 chat.save()
