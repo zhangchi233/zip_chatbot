@@ -14,7 +14,6 @@ async function authenticatedFetch(url, options = {}) {
     const csrfToken = await fetchCSRFToken();
     console.log('Adding CSRF token to headers:', csrfToken);
     const headers = {
-        'Content-Type': 'application/json',
         ...options.headers
     };
 

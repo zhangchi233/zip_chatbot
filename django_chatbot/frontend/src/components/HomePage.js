@@ -6,6 +6,7 @@ import LoginPage from './LoginPage';
 import RegisterPage from './RegisterPage';
 import ChatBotPage from './ChatBotPage';
 import InteractiveBody from "./InteractiveBody";
+import UploadImagePage from "./UploadImagePage";
 import TokenContext from './TokenContext';
 import './HomePage.css';
 
@@ -45,6 +46,7 @@ export default function HomePage() {
             <Switch>
             <Route path="/imageui" component={InteractiveBody} />
             <Route path="/chatbot" component={ChatBotPage} />
+            <Route path="/upload" component={UploadImagePage} />
             <Route>
             <div className={classes.root}>
             <AppBar position="sticky">

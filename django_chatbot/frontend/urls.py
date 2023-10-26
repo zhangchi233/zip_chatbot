@@ -7,4 +7,5 @@ urlpatterns = [
     path('register', index),
     path('chatbot', index),
     path('imageui', index),
+    path('upload', index),
 ]

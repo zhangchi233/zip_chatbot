@@ -13,6 +13,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Modal from '@mui/material/Modal';
 import Fade from '@mui/material/Fade';
 import Link from '@mui/material/Link';
+import UploadImagePage from './UploadImagePage';
 import { AppBar, Toolbar, Container } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 
@@ -31,6 +32,7 @@ export default class ChatBotPage extends Component {
             nmessages: 0, // Number of messages sent by the user
             finishConversation: false,
             starttime: null,
+            UploadImage: false,
         };
     }
     handleInputChange = (event) => {
@@ -86,6 +88,7 @@ export default class ChatBotPage extends Component {
             authenticatedFetch("/api/openai", {
                 method: "POST",
                 headers: {
+                    'Content-Type': 'application/json',
                     'Authorization': `Token ${this.context.token}`
                 },
                 body: JSON.stringify({ message: inputMessage, starttime: chatstarttime, nmessages: userMessageCount })
@@ -108,11 +111,14 @@ export default class ChatBotPage extends Component {
         this.setState({ showModal: true });
     }
     handleClose = () => {
-        this.setState({ showModal: false });
+        this.setState({ showModal: false, UploadImage: false });
     }
     handleDownloadReport = () => {
-        const username = encodeURIComponent(this.context.username);  // Ensure the username is URL encoded to handle any special characters
-        window.open(`/api/download_report?username=${username}`, '_blank');
+     // Ensure the username is URL encoded to handle any special characters
+        const username = encodeURIComponent(this.context.username);
+        const chatstarttime = localStorage.getItem('starttime');
+        window.open(`/api/download_report?username=${username}&starttime=${chatstarttime}`, '_blank');
+        
     }
 
     handleClearChat = () => {
@@ -134,8 +140,7 @@ export default class ChatBotPage extends Component {
         }
     }
     handleUploadImage = () => {
-        const username = encodeURIComponent(this.context.username);  // Ensure the username is URL encoded to handle any special characters
-        window.open(`/api/upload_image?username=${username}`, '_blank');
+        this.setState({ UploadImage: true });
     }
     
     handleLogout = () => {
@@ -143,7 +148,8 @@ export default class ChatBotPage extends Component {
         authenticatedFetch("/api/logout", { 
             method: "POST",
             headers: {
-                'Authorization': `Token ${this.context.token}`
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${this.context.token}`,
             }
         })
         .then(response => response.json())
@@ -236,12 +242,16 @@ export default class ChatBotPage extends Component {
                     <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleShowBody} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Show Anatomy
                     </Link>
-                    {this.state.finishConversation ? 
+                    {/* {this.state.finishConversation ? 
                     <Link href="#" className="report-Link" variant="contained" color="primary" onClick={this.handleDownloadReport} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Download Report
-                    </Link> : null}
+                    </Link> 
+                    : null} */}
+                    <Link href="#" className="report-Link" variant="contained" color="primary" onClick={this.handleDownloadReport} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                        Download Report
+                    </Link> 
                     <Link href="#" className="image-Link" variant="contained" color="primary" onClick={this.handleUploadImage} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
-                        Upload Image
+                        Upload Image 
                     </Link>
                     <Link href="#" className="clear-Link" variant="contained" color="primary" onClick={this.handleClearChat} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Clear Chat
@@ -296,6 +306,18 @@ export default class ChatBotPage extends Component {
                     <Fade in={this.state.showModal}>
                         <div style={{ outline: 'none', backgroundColor: 'white', padding: '20px', borderRadius: '10px' }}>
                         <InteractiveBody  onPartClick={this.handleBodyPartClick} onClearSelection={this.handleClearSelection} />
+                        </div>
+                    </Fade>
+            </Modal>
+            <Modal
+                    className='upload-image-modal'
+                    aria-labelledby="upload-image-modal"
+                    open={this.state.UploadImage}
+                    onClose={this.handleClose}
+                >
+                    <Fade in={this.state.UploadImage}>
+                        <div style={{ outline: 'none', backgroundColor: 'white', padding: '20px', borderRadius: '10px' }}>
+                        <UploadImagePage />
                         </div>
                     </Fade>
             </Modal>
