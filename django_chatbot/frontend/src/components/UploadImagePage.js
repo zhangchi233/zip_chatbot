@@ -18,6 +18,7 @@ export default class UploadImagePage extends Component {
                 open: false,
                 message: '',
             },
+            severity: 'error',
         };
     }
 	// On file select (from the pop up)
@@ -53,12 +54,13 @@ export default class UploadImagePage extends Component {
             body: formData,
         }).then(response => {
             console.log(response);
-            if (response.status === 200) {
+            if (response.status === 201) {
                 this.setState({
                     snackbar: {
                         open: true,
                         message: 'Upload successful!',
                     },
+                    severity: 'success',
                 });
             } else {
                 this.setState({
@@ -66,6 +68,7 @@ export default class UploadImagePage extends Component {
                         open: true,
                         message: 'Upload failed!',
                     },
+                    severity: 'error',
                 });
             }
         }).catch(error => {
@@ -86,6 +89,7 @@ export default class UploadImagePage extends Component {
 	render() {
 
 		return (
+            // <>
 			<div className="upload-container">
                 <h1 className='heading'>Upload File</h1>
                 <div className="file-input-container">
@@ -105,19 +109,22 @@ export default class UploadImagePage extends Component {
                     <Button className="upload-button" variant="contained" color="primary" onClick={this.onFileUpload}>
                         Upload!
                     </Button>
-                    <Snackbar 
-                        open={this.state.snackbar.open}
-                        autoHideDuration={6000}
-                        onClose={this.handleSnackbarClose}
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                    >
-                        <Alert onClose={this.handleSnackbarClose} severity="error">
-                            {this.state.snackbar.message}
-                        </Alert>
-                    </Snackbar>
+                <Snackbar 
+                open={this.state.snackbar.open}
+                autoHideDuration={6000}
+                onClose={this.handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                >
+                    <Alert onClose={this.handleSnackbarClose} severity={this.state.severity}>
+                        {this.state.snackbar.message}
+                    </Alert>
+                </Snackbar>
+                    
             </div>
-            
+
 		);
 	}
 }
 
+ 
+        {/* </> */}

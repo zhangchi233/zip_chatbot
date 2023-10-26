@@ -4,16 +4,29 @@ body {
     position: fixed;
 }
 
-.front path {
+svg path {
     fill: transparent;
     stroke: none;
     transition: fill 0.3s;
 }
+.SwitchContainer {
+    display: flex;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    justify-content: center;
+    align-items: center;
 
-.front path:hover {
+}
+svg path:hover {
     fill: #FF0000;
     opacity: 0.3;
 }
+svg path:hover .hover-element{
+    display: block;
+
+}
+
 
 svg {
     z-index: 10;
@@ -44,3 +57,11 @@ svg {
     background-color: #0d47a1; /* Even darker for active state */
     transform: scale(1);
 }
+.hover-element {
+    display: none;
+    position: absolute;
+    background-color: black;
+    color: white;
+    border-radius: 5px;
+}
+

@@ -337,7 +337,7 @@ export default class ChatBotPage extends Component {
                     onClose={this.handleClose}
                 >
                     <Fade in={this.state.UploadImage}>
-                        <div style={{ outline: 'none', backgroundColor: 'white', padding: '20px', borderRadius: '10px' }}>
+                        <div style={{ outline: 'none', backgroundColor: 'white', padding: '10px', borderRadius: '10px' }}>
                         <UploadImagePage />
                         </div>
                     </Fade>
@@ -348,7 +348,7 @@ export default class ChatBotPage extends Component {
                 onClose={this.handleSnackbarClose}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
             >
-                <Alert onClose={this.handleSnackbarClose} severity="error">
+                <Alert onClose={this.handleSnackbarClose} severity="info">
                     {this.state.snackbar.message}
                 </Alert>
              </Snackbar>
