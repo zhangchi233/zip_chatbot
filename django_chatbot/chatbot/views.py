@@ -213,7 +213,8 @@ class OpenaiView(APIView):
                                   " if you think the information is enough please type: 'no, chatgpt will give summary' please be cautious as possible"
                 response = ask_openai(summary_message, chat_messages)
                 # response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
-
+                response_continue = response.split("\n")[0]
+                response = "\n".join(response.split("\n")[1:]).strip()
                 response = response+"\n"+"please type:'yes' or 'no' to indicate whether the summary is correct or not \n" \
                                          "if you agree with the summary please sign and upload"
                 # response = "summary testis asdfasdfafaasdfasdf \n asdfadsfadsfasdfadsf \n asdfasdf"
