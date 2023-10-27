@@ -189,8 +189,8 @@ export default class ChatBotPage extends Component {
         this.setState(({
             messages: newMessages,
             nmessages: 0,
-            starttime: null,
-            finishConversation: false
+            finishConversation: false,
+            starttime: this.getCurrentDateTime(),
         }));
     }
     handleKeyDown = (event) => {
@@ -273,7 +273,7 @@ export default class ChatBotPage extends Component {
         const { messages, inputMessage, starttime } = this.state;
         const storedMessages = this.getMessagesFromLocalStorage();
         // to load starttime when refreshing
-        const chatstarttime = localStorage.getItem('starttime');
+        var chatstarttime = localStorage.getItem('starttime');
         if(chatstarttime === null) {
             chatstarttime = this.getCurrentDateTime();
         }
