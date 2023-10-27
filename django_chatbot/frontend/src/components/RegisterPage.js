@@ -20,7 +20,11 @@ export default class RegisterPage extends Component {
             password1: "",
             password2: "",
             token: null,
-            errorMessage: ""
+            snackbar: {
+                open: false,
+                message: '',
+                severity: '',
+            },
         };
     }
     handleInputChange = (event) => {
@@ -62,15 +66,28 @@ export default class RegisterPage extends Component {
         .then(data => {
             if (data.message && data.message === "User created successfully") {
                 console.log("Successfully registered!");
-                this.setState({ errorMessage: "" });
+                this.setState({ 
+                    snackbar: {
+                        open: true,
+                        message: 'Successfully registered!',
+                        severity: 'success',
+                    },
+                });
                 
                 // Redirect to the Login Page
                 this.props.history.push("/login");
             }
         })
         .catch(error => {
+
             console.error("There was an error during registration:", error);
-            this.setState({ errorMessage: error.message || "There was an error during registration. Please try again." });
+            this.setState({ 
+                snackbar: {
+                    open: true,
+                    message: error.message || 'There was an error during registration. Please try again.',
+                    severity: 'error',
+                },
+         });
         });
 
     }
@@ -87,11 +104,6 @@ export default class RegisterPage extends Component {
                     <Typography variant="body1" gutterBottom>
                         Register as a new user
                     </Typography>
-                    {this.state.errorMessage && (
-                        <Typography variant="body2" style={{ color: 'red' }}>
-                            {this.state.errorMessage}
-                        </Typography>
-                    )}
                     <FormControl component="fieldset" style={{ width: '300px', marginBottom: '15px' }}>
                         <TextField label="Username" type="username" name="username" value={this.state.username} onChange={this.handleInputChange} fullWidth />
                         <TextField label="E-mail" type="email" name="email" value={this.state.email} onChange={this.handleInputChange} fullWidth style={{ marginTop: '10px' }} />
@@ -104,6 +116,16 @@ export default class RegisterPage extends Component {
                     <Link to="/login" className="loginlink">Already have an account? Log in</Link>
                 </Grid>
             </TokenContext.Provider>
+            <Snackbar 
+                open={this.state.snackbar.open}
+                autoHideDuration={6000}
+                onClose={this.handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                >
+                <Alert onClose={this.handleSnackbarClose} severity={this.state.snackbar.severity}>
+                    {this.state.snackbar.message}
+                </Alert>
+             </Snackbar>
             </>
         );
     }

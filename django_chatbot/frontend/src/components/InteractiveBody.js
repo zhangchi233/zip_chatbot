@@ -49,7 +49,7 @@ export default class InteractiveBody extends Component {
     render() {
         const { hoveredPart, clickedPart, currentImage, currentSex } = this.state;
         return (
-        <div>
+        <div className="interactive-body">
             {currentSex === 'Male' ? (
               currentImage === 'front' ? (
         <svg

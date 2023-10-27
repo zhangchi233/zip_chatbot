@@ -17,6 +17,7 @@ import UploadImagePage from './UploadImagePage';
 import { AppBar, Toolbar, Container, Alert } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import Snackbar from '@mui/material/Snackbar';
+import styles from './ChatStyles.module.css';
 
 import InteractiveBody from './InteractiveBody'
 
@@ -37,7 +38,11 @@ export default class ChatBotPage extends Component {
             snackbar: {
                 open: false,
                 message: '',
+                severity: '',
             },
+            chattimeout: false,
+            loadingMessage: false,
+
         };
     }
     handleInputChange = (event) => {
@@ -66,6 +71,27 @@ export default class ChatBotPage extends Component {
         return storedMessages ? JSON.parse(storedMessages) : [];
     }
     handleSend = () => {
+        this.setState({ 
+            loadingMessage: true 
+        });
+        const TIMEOUT_DURATION = 10000; // 10 seconds, for instance
+        let didTimeOut = false;
+
+        const timeout = setTimeout(() => {
+            didTimeOut = true;
+            newMessages[newMessages.length - 1].secondary = ' - timed out'; // Update the last message to indicate the timeout
+            this.saveMessagesLocally(newMessages);  // Save the messages to local storage
+            this.setState({
+                snackbar: {
+                    open: true,
+                    message: 'OpenAI request timed out. Try again.',
+                    severity: 'warning',
+                },
+                chattimeout: true,
+                loadingMessage: false,
+            });
+        }, TIMEOUT_DURATION);
+
         const currentDateTime = this.getCurrentDateTime();
         const { starttime, messages, nmessages, inputMessage } = this.state;
         let chatstarttime = starttime;
@@ -82,7 +108,7 @@ export default class ChatBotPage extends Component {
             starttime: chatstarttime,
 
         }, () => { // Using callback form of setState to ensure we have the latest state
-            this.saveMessagesLocally(this.state.messages);
+            this.saveMessagesLocally(newMessages);
         });
         // Count the number of messages sent by the user
         // console.log(starttime, chatstarttime);
@@ -98,13 +124,29 @@ export default class ChatBotPage extends Component {
                 },
                 body: JSON.stringify({ message: inputMessage, starttime: chatstarttime, nmessages: userMessageCount })
             })
-            .then(response => response.json())
+            .then(response => {
+                clearTimeout(timeout); // clear the timeout
+                if (!didTimeOut) {
+                    return response.json();
+                } else {
+                    // Don't process if it already timed out
+                    throw new Error('Request timed out.');
+                }
+            }
+            )
             .then(data => {
                 const botTime = this.getCurrentDateTime();
                 this.setState(prevState => ({
                     messages: [...prevState.messages, { text: data.response, sender: 'bot', time: botTime }],
                     finishConversation: data.conversation,
                     nmessages: userMessageCount,
+                    chattimeout: false,
+                    loadingMessage: false,
+                    snackbar: {
+                        open: true,
+                        message: 'New Message',
+                        severity: 'info',
+                    },
                 }), () => {
                     this.saveMessagesLocally(this.state.messages);  // Save the messages to local storage
                 });
@@ -124,6 +166,7 @@ export default class ChatBotPage extends Component {
                 snackbar: {
                     open: true,
                     message: 'Please finish the conversation first.',
+                    severity: 'info',
                 },
             });
             return;
@@ -135,6 +178,7 @@ export default class ChatBotPage extends Component {
     handleClearChat = () => {
         localStorage.removeItem('starttime');
         localStorage.removeItem('messages');
+        localStorage.removeItem('finishConversation');
         const newMessage = {text: `LLMbq. Welcome to the Medical Assistant ${this.context.username}!. Please select the body part you have complaints about`, sender: 'bot', time: this.getCurrentDateTime()}
         const newMessages = [newMessage];
         this.setState(({
@@ -198,6 +242,7 @@ export default class ChatBotPage extends Component {
     
     componentDidUpdate(prevProps, prevState) {
         // Check if the modal was closed and a body part was previously selected
+
         if(prevState.finishConversation !== this.state.finishConversation ) {
             localStorage.setItem('finishConversation', this.state.finishConversation);
         }
@@ -230,12 +275,14 @@ export default class ChatBotPage extends Component {
             this.setState(({
                 messages: newMessages,
                 finishConversation: storedFinishConversation === 'true' ? true : false,
+                loadingMessage: loadingMessage === 'true' ? true : false,
             }));
         } else {
             this.setState({ 
                 messages: storedMessages,
                 starttime: chatstarttime,
                 finishConversation: storedFinishConversation === 'true' ? true : false,
+                loadingMessage: false
              });
         }
 
@@ -248,11 +295,12 @@ export default class ChatBotPage extends Component {
             snackbar: {
                 open: false,
                 message: '',
+
             },
         });
     }
     render() {
-        const { messages, inputMessage } = this.state;
+        const { messages, inputMessage, chattimeout, loadingMessage } = this.state;
 
         return (
             <>
@@ -283,14 +331,25 @@ export default class ChatBotPage extends Component {
                     
                 </div>
                 <Paper className="chat-container" style={{ height: '75%', width: '90%', overflowY: 'auto', marginBottom: '20px' }}>
-                    <List>
-                        {messages.map((message, index) => (
-                            <ListItem className={`message ${message.sender}`} key={index}>
-                                <ListItemText primary={message.text} secondary={`${message.sender === 'user' ? 'Patient' : 'LLMbq'} - ${this.formatDateTime(message.time)}`} />
-                            </ListItem>
-                        ))}
-                    </List>
-                </Paper>
+                <List>
+                    {messages.map((message, index) => (
+                        <ListItem className={`message ${message.sender}`} key={index}>
+                            <ListItemText primary={message.text} 
+                                          secondary={`${message.sender === 'user' ? 'Patient' : 'LLMbq'} - ${this.formatDateTime(message.time)}${message.secondary ? message.secondary : ''}`} 
+                            />
+                        </ListItem>
+                    ))}
+                    {loadingMessage && 
+                        <div className={styles.half + ' ' + styles.light}>
+                            <div className={styles.typing}>
+                                <span className={styles.circle + ' ' + styles.scaling}></span>
+                                <span className={styles.circle + ' ' + styles.scaling}></span>
+                                <span className={styles.circle + ' ' + styles.scaling}></span>
+                            </div>
+                        </div>
+                    }
+                </List>
+                 </Paper>
                 <Grid className="input-container" container direction="row" alignItems="center" justifyContent="center" spacing={2} style={{ width: '80%', position: 'fixed', bottom: '10px', background: '#fff' }}>
                     <Grid item xs={9}>
                         <TextField className="input-field"
@@ -343,12 +402,13 @@ export default class ChatBotPage extends Component {
                     </Fade>
             </Modal>
             <Snackbar 
+                className='snackbar'
                 open={this.state.snackbar.open}
                 autoHideDuration={6000}
                 onClose={this.handleSnackbarClose}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
             >
-                <Alert onClose={this.handleSnackbarClose} severity="info">
+                <Alert onClose={this.handleSnackbarClose} severity={this.state.snackbar.severity}>
                     {this.state.snackbar.message}
                 </Alert>
              </Snackbar>
