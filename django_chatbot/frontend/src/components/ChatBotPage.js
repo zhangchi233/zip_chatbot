@@ -138,6 +138,9 @@ export default class ChatBotPage extends Component {
             )
             .then(data => {
                 const botTime = this.getCurrentDateTime();
+                if (data.response === '') {
+                    data.response = 'Sorry, Could you please repeat the question?';
+                }
                 this.setState(prevState => ({
                     messages: [...prevState.messages, { text: data.response, sender: 'bot', time: botTime }],
                     finishConversation: data.conversation,
@@ -163,16 +166,16 @@ export default class ChatBotPage extends Component {
         this.setState({ showModal: false, UploadImage: false });
     }
     handleDownloadReport = () => {
-        if (!this.state.finishConversation) {
-            this.setState({
-                snackbar: {
-                    open: true,
-                    message: 'Please finish the conversation first.',
-                    severity: 'info',
-                },
-            });
-            return;
-        }
+        // if (!this.state.finishConversation) {
+        //     this.setState({
+        //         snackbar: {
+        //             open: true,
+        //             message: 'Please finish the conversation first.',
+        //             severity: 'info',
+        //         },
+        //     });
+        //     return;
+        // }
         const username = encodeURIComponent(this.context.username);  // Ensure the username is URL encoded to handle any special characters
         window.open(`api/download_report?username=${username}&starttime=${this.state.starttime}`, '_blank');
     }
