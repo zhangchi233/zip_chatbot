@@ -7,6 +7,7 @@ import FormControl from "@mui/material/FormControl";
 import { Link } from "react-router-dom";
 import TokenContext from './TokenContext'; // Import the context
 import './RegisterPage.css';
+import { Snackbar, Alert } from '@mui/material';
 import { authenticatedFetch } from './csrfTokenUtility';
 const BASE_API_URL = 'http://127.0.0.1:8000/api'
 
