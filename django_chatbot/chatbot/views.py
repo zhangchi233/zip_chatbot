@@ -200,7 +200,7 @@ class OpenaiView(APIView):
             # added Timezone.now() to the context
             if len(response.strip())==0:
                 response = "the web connection is not stable, please try again"
-            return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response,'conversation':False})
+            return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response,'conversation':True})
         else:
             if "no, chatgpt will give summary" in response_continue:
                 summary_message = "given the conversation above, please give a summary of the patient's health condition in the " \
@@ -245,7 +245,7 @@ class OpenaiView(APIView):
                     chat.save()
                     if len(response.strip()) == 0:
                         response = "the web connection is not stable, please try again"
-                    return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response,'conversation':False})
+                    return JsonResponse({'starttime': str(starttime), 'message': message, 'response': response,'conversation':True})
 
 
 
@@ -299,7 +299,7 @@ class OpenaiView(APIView):
         #return redirect("chatbot")
         print("context is :", chats)
         # added Timezone.now() to the context
-        return JsonResponse({'starttime': str(starttime), 'message': context['message'], 'response': response, 'conversation': False})
+        return JsonResponse({'starttime': str(starttime), 'message': context['message'], 'response': response, 'conversation': True})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
