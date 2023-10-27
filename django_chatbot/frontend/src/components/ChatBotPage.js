@@ -43,7 +43,9 @@ export default class ChatBotPage extends Component {
             chattimeout: false,
             loadingMessage: false,
 
+
         };
+        this.InteractiveBody = React.createRef();
     }
     handleInputChange = (event) => {
         this.setState({
@@ -74,7 +76,7 @@ export default class ChatBotPage extends Component {
         this.setState({ 
             loadingMessage: true 
         });
-        const TIMEOUT_DURATION = 10000; // 10 seconds, for instance
+        const TIMEOUT_DURATION = 120000; // 10 seconds, for instance
         let didTimeOut = false;
 
         const timeout = setTimeout(() => {
@@ -225,9 +227,10 @@ export default class ChatBotPage extends Component {
 
     
     handleBodyPartClick = (part) => {
+        const interactiveBody = this.InteractiveBody.current;
             this.setState({ 
                 bodyPart: part, 
-                inputMessage: `I have complaint in my ${part}`, 
+                inputMessage: `I have complaint in my ${part}. My gender is ${interactiveBody.state.currentSex.toLowerCase()}`, 
                 bodyPartSelected: true 
             });
 
@@ -275,7 +278,7 @@ export default class ChatBotPage extends Component {
             this.setState(({
                 messages: newMessages,
                 finishConversation: storedFinishConversation === 'true' ? true : false,
-                loadingMessage: loadingMessage === 'true' ? true : false,
+                loadingMessage: false,
             }));
         } else {
             this.setState({ 
@@ -308,23 +311,23 @@ export default class ChatBotPage extends Component {
             <Grid container spacing={3} direction="column" alignItems="center" justifyContent="center" style={{ minHeight: '100vh' }}>
                 {/* Only Logout Link here */}
                 <div style={{ width: '90%', display: 'flex', justifyContent: 'flex-end' }}>
-                    <Link href="#" className="body-Link" variant="contained" color="primary" onClick={this.handleShowBody} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                    <Button className="front-Button" variant="Text" onClick={this.handleShowBody} >
                         Show Anatomy
-                    </Link>
+                    </Button>
                     {/* {this.state.finishConversation ? 
-                    <Link href="#" className="report-Link" variant="contained" color="primary" onClick={this.handleDownloadReport} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                    <Button className=""front-Button" variant="Text" onClick={this.handleDownloadReport} >
                         Download Report
-                    </Link> 
+                    </Button> 
                     : null} */}
-                    <Link href="#" className="report-Link" variant="contained" color="primary" onClick={this.handleDownloadReport} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                    <Button className="front-Button" variant="Text" onClick={this.handleDownloadReport} >
                         Download Report
-                    </Link> 
-                    <Link href="#" className="image-Link" variant="contained" color="primary" onClick={this.handleUploadImage} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                    </Button> 
+                    <Button className="front-Button" variant="Text" onClick={this.handleUploadImage} >
                         Upload Image 
-                    </Link>
-                    <Link href="#" className="clear-Link" variant="contained" color="primary" onClick={this.handleClearChat} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
+                    </Button>
+                    <Button className="front-Button" variant="Text" onClick={this.handleClearChat} >
                         Clear Chat
-                    </Link>
+                    </Button>
                     <Link href="#" onClick={this.handleLogout} style={{ color: 'blue', textDecoration: 'none', margin: '10px' }}>
                         Logout
                     </Link>
@@ -385,7 +388,7 @@ export default class ChatBotPage extends Component {
                 >
                     <Fade in={this.state.showModal}>
                         <div style={{ outline: 'none', backgroundColor: 'white', padding: '20px', borderRadius: '10px' }}>
-                        <InteractiveBody  onPartClick={this.handleBodyPartClick} onClearSelection={this.handleClearSelection} />
+                        <InteractiveBody ref={this.InteractiveBody} onPartClick={this.handleBodyPartClick} onClearSelection={this.handleClearSelection} />
                         </div>
                     </Fade>
             </Modal>
@@ -406,7 +409,7 @@ export default class ChatBotPage extends Component {
                 open={this.state.snackbar.open}
                 autoHideDuration={6000}
                 onClose={this.handleSnackbarClose}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
                 <Alert onClose={this.handleSnackbarClose} severity={this.state.snackbar.severity}>
                     {this.state.snackbar.message}

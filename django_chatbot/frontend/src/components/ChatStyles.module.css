@@ -5,16 +5,17 @@ body {
     height: 100vh;
     margin: 0;
     padding: 0;
+    position: sticky;
   }
   
   .half {
-    display: flex;
+    display: inline-block;
     justify-content: center;
     align-items: center;
   }
   
   .half.light .typing {
-    background-color: #e0e0e0;
+    background-color:  #95ff00;
   }
   
   .half.dark {

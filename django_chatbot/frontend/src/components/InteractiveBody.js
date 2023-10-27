@@ -900,7 +900,7 @@ export default class InteractiveBody extends Component {
                 
         {clickedPart && (
           <div>
-            <h3> I have complaint in my {clickedPart}</h3>
+            <h3> Body Part: {clickedPart}. Gender: {currentSex}</h3>
           </div>
         )}
         <div className="buttonContainer">
