@@ -27,6 +27,11 @@ class PDFReportView(View):
             summary = "No summary found"
         else:
             summary = summary.summary
+            # remove Please confirm 'yes' or 'no'. please type:'yes' or 'no' to indicate whether the summary is correct or not if you agree with the summary please sign and upload
+            summary = summary.replace("please type:'yes' or 'no' to indicate whether the summary is correct or not if you agree with the summary please sign and upload",
+                                      "Please sign and upload the summary")
+            # remove 'no, chatgpt will give a summary Upon analyzing the conversation,
+            summary = summary.replace("'no, chatgpt will give a summary", "Here is your report:")
         # Create a PDF document using ReportLab
         from io import BytesIO
         buffer = BytesIO()
