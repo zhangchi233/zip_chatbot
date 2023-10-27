@@ -274,6 +274,9 @@ export default class ChatBotPage extends Component {
         const storedMessages = this.getMessagesFromLocalStorage();
         // to load starttime when refreshing
         const chatstarttime = localStorage.getItem('starttime');
+        if(chatstarttime === null) {
+            chatstarttime = this.getCurrentDateTime();
+        }
         console.log("retrieving starttime", chatstarttime)
         if(storedMessages.length === 0) {
             const newMessage = {text: `LLMbq. Welcome to the Medical Assistant ${username}!. Please select the body part you have complaints about`, sender: 'bot', time: this.getCurrentDateTime()}
@@ -282,6 +285,7 @@ export default class ChatBotPage extends Component {
                 messages: newMessages,
                 finishConversation: storedFinishConversation === 'true' ? true : false,
                 loadingMessage: false,
+                starttime: chatstarttime,
             }));
         } else {
             this.setState({ 
